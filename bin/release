@@ -1,0 +1,3 @@
+#!/bin/sh
+echo "-----> GLPK buildpack release"
+exit 0
