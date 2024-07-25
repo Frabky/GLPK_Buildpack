@@ -1,0 +1,125 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+
+<title>Quarry IQ - Upload Data</title>
+
+<h2>Quarry IQ - Upload Data</h2>
+<h4>Project: {{ project_name }} {{ project_time_period }}</h4>
+<h4>Company: {{ project_company }}</h4>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+<form id="uploadForm" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <table>
+        <tr>
+            <th style="vertical-align: middle;">Filtered File</th>
+            <td style="vertical-align: middle;">
+            <th style="vertical-align: middle;">Distances File</th>
+        </tr>
+        <tr><th class="empty"></th></tr>
+        <tr><th class="empty"></th></tr>
+        <tr>
+            <td style="vertical-align: middle;">
+                <div class="form-group">
+                    <!-- Hide the default file input -->
+                    <input type="file" id="filteredFile" name="filteredFile" style="display: none;">
+                    <!-- Use a label with a custom button style to trigger the file input -->
+                    <label for="filteredFile" class="btn btn-outline-dark" style="width: 350px;">
+                        Choose File
+                    </label>
+                </div>
+            </td>
+            <td class="space"></td>
+            <td style="vertical-align: middle;">
+                <div class="form-group">
+                    <!-- Hide the default file input -->
+                    <input type="file" id="distancesFile" name="distancesFile" style="display: none;">
+                    <!-- Use a label with a custom button style to trigger the file input -->
+                    <label for="distancesFile" class="btn btn-outline-dark" style="width: 350px;">
+                        Choose File
+                    </label>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td style="vertical-align: middle;">
+                <button type="submit" class="btn btn-outline-success" style="width: 350px;">Upload</button>
+            </td>
+        </tr>
+        <tr><th class="empty"></th></tr>
+    </table>
+</form>
+
+<table>
+    <tr>
+        <th class="empty"></th><th class="empty"></th>
+        <th class="empty"></th><th class="empty"></th>
+        <th class="empty"></th><th class="empty"></th>
+    </tr>
+</table>
+
+
+{% if filtered_file_error %}
+    <div class="alert alert-danger" role="alert">
+        {{ filtered_file_error }}
+    </div>
+{% endif %}
+
+{% if distances_df_error %}
+    <div class="alert alert-danger" role="alert">
+        {{ distances_df_error }}
+    </div>
+{% endif %}
+
+<script>
+
+// JavaScript to update the text of the "Choose File" button with the selected file name
+const filteredFileInput = document.getElementById('filteredFile');
+const filteredChooseFileButton = document.querySelector('label[for="filteredFile"]');
+const distancesFileInput = document.getElementById('distancesFile');
+const distancesChooseFileButton = document.querySelector('label[for="distancesFile"]');
+
+filteredFileInput.addEventListener('change', function() {
+    updateChooseFileButton(filteredFileInput, filteredChooseFileButton);
+});
+
+distancesFileInput.addEventListener('change', function() {
+    updateChooseFileButton(distancesFileInput, distancesChooseFileButton);
+});
+
+function updateChooseFileButton(inputElement, buttonElement) {
+    if (inputElement.files.length > 0) {
+        const fileName = inputElement.files[0].name;
+        buttonElement.textContent = fileName;
+    } else {
+        buttonElement.textContent = 'Choose File';
+    }
+}
+
+document.getElementById('uploadForm').addEventListener('submit', function(event) {
+    // Show the loading spinner before sending data to the backend
+    showLoadingSpinner();
+
+    // Get the file input elements
+    var filteredFileInput = document.getElementById('filteredFile');
+    var distancesFileInput = document.getElementById('distancesFile');
+
+    // Check if either file input is empty
+    if (!filteredFileInput.files[0] || !distancesFileInput.files[0]) {
+        // Prevent form submission
+        event.preventDefault();
+        // Alert the user to choose both files
+        alert('Please choose files before uploading');
+        hideLoadingSpinner();
+    }
+});
+</script>
+
+{% endblock content %}

@@ -1,0 +1,357 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+
+<title>P4P - Cluster to Box Allocation</title>
+
+<h2>Production for Profit - Cluster to Box Allocation</h2>
+<h4>Project: {{ project_name }} {{ project_time_period }}</h4>
+<h4>Quarry: {{ quarry_name }}</h4>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+    <table class="table" id="cluster_to_box_table">
+        <thead>
+            <tr>
+                <th class="empty"></th>
+
+                {% if clusterToBox_df.empty %}
+
+                <th style="vertical-align: middle;" contenteditable="true">Cost Box 1</th>
+
+                {% else %}
+
+                    {% for costBox in uniqueCostBox %}
+                        <th style="vertical-align: middle;" contenteditable="true">{{ costBox }}</th>
+                    {% endfor %}
+
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% if clusterToBox_df.empty %}
+
+                <tr>
+                    <th style="vertical-align: middle;" contenteditable="true">Product Cluster 1</th>
+                    <td style="vertical-align: middle;" class="allocation_cells" contenteditable="true" onkeypress="return isNumber(event)"></td>
+                </tr>
+
+            {% else %}
+
+                {% for productCluster, costBoxValueDict in clusterToBox_dict.items %}
+                    <tr>
+                        <th style="vertical-align: middle;" contenteditable="true">{{ productCluster }}</th>
+                        {% for costBox, value in costBoxValueDict.items %}
+                            <td style="vertical-align: middle;" contenteditable="true" onkeypress="return isNumber(event)">
+                                {{ value }}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+
+            {% endif %}
+
+        </tbody>
+    </table>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+<table>
+    <tr>
+        <th class="empty"><button class='btn btn-outline-dark' style="width: 250px;" id="addCostBox">Add Cost Box</button></th>
+        <th class="empty"><button class='btn btn-outline-dark' style="width: 250px; margin-left: 20px;" id="deleteCostBox">Delete Cost Box</button></th>
+        <th class="empty"><button class='btn btn-warning' style="width: 250px; margin-left: 20px;" id="Save">Save</button></th>
+    </tr>
+    <tr>
+        <th class="empty"></th>
+    </tr>
+    <tr>
+        <th class="empty"><button class='btn btn-outline-dark' style="width: 250px;" id="addProductCluster">Add Product Cluster</button></th>
+        <th class="empty"><button class='btn btn-outline-dark' style="width: 250px; margin-left: 20px;" id="deleteProductCluster">Delete Product Cluster</button></th>
+    </tr>
+    <tr>
+        <th class="empty"></th>
+    </tr>
+</table>
+
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+    <input type="hidden" id="project_id" value="{{ project_id }}">
+    <input type="hidden" id="quarry_id" value="{{ quarry_id }}">
+
+
+<script>
+
+// Making sure only number can be typed in allocation cells
+function isNumber(evt) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+
+    if (charCode === 45) { // If the character is "-"
+        return false; // Prevent input of "-"
+    } else if (charCode === 8) { // If the character is backspace
+        return true; // Allow backspace
+    } else if (charCode !== 43 && (charCode < 48 || charCode > 57)) {
+        return false; // Only allow digits and backspace
+    }
+    return true;
+}
+
+
+// Add Cost Box button
+document.getElementById('addCostBox').addEventListener('click', function() {
+    // Find the table element
+    var table = document.getElementById('cluster_to_box_table');
+
+    // Create a new table header cell (th) for the cost box
+    var costBoxHeader = document.createElement('th');
+    costBoxHeader.contentEditable = true;
+    costBoxHeader.textContent = 'Cost Box ' + (table.rows[0].cells.length); // Set the header text
+    table.rows[0].appendChild(costBoxHeader); // Append the new header cell to the table header row
+
+    // Iterate over each row in the table's tbody
+    for (var i = 0; i < table.tBodies[0].rows.length; i++) {
+        // Create a new table data cell (td) for the cost box in the current row
+        var costBoxCell = document.createElement('td');
+        costBoxCell.contentEditable = true;
+        costBoxCell.setAttribute('onkeypress', 'return isNumber(event)');
+        costBoxCell.setAttribute('class', 'allocation_cells'); // Add the class
+        table.tBodies[0].rows[i].appendChild(costBoxCell); // Append the new data cell to the current row
+
+        // Add event listener to the newly created cell
+        addEventListenerToCell(costBoxCell);
+    }
+});
+
+
+// Delete Cost Box button
+document.getElementById('deleteCostBox').addEventListener('click', function() {
+    // Find the table element
+    var table = document.getElementById('cluster_to_box_table');
+
+    // Check if there are any columns to delete
+    if (table.rows[0].cells.length <= 2) {
+        alert('Table must contain at least one cost box.');
+        return; // Exit the function if there's only one column remaining
+    }
+
+    // Iterate over each row in the table's tbody
+    for (var i = 0; i < table.tBodies[0].rows.length; i++) {
+        // Remove the last data cell (td) from the current row
+        table.tBodies[0].rows[i].deleteCell(-1);
+    }
+
+    // Remove the last header cell (th) from the table header row
+    table.rows[0].deleteCell(-1);
+});
+
+
+// Add Product Cluster button
+document.getElementById('addProductCluster').addEventListener('click', function() {
+    // Find the table element
+    var table = document.getElementById('cluster_to_box_table');
+
+    // Create a new row element
+    var newRow = table.insertRow(-1);
+
+    // Calculate the number of product clusters
+    var rowCount = table.rows.length - 1; // Exclude the header row
+
+    // Insert the header "Product Cluster + number" in the first cell of the first row
+    if (table.rows.length === 1) {
+        var headerCell = newRow.insertCell(0);
+        headerCell.innerHTML = "<b>Product Cluster 1</b>";
+    } else {
+        // Insert a cell for the Product Cluster name
+        var productNameCell = newRow.insertCell(0);
+        productNameCell.contentEditable = true; // Make the cell editable
+        productNameCell.setAttribute('class', 'product-cluster-cell'); // Add a class for styling
+        productNameCell.innerHTML = "<b>Product Cluster " + rowCount + "</b>";
+    }
+
+    // Insert empty cells for each Cost Box column
+    for (var i = 1; i < table.rows[0].cells.length; i++) {
+        var emptyCell = newRow.insertCell(i);
+        emptyCell.contentEditable = true; // Make the cell editable
+        emptyCell.setAttribute('onkeypress', 'return isNumber(event)');
+        emptyCell.setAttribute('class', 'allocation_cells'); // Add the class
+
+        // Add event listener to the newly created cell
+        addEventListenerToCell(emptyCell);
+    }
+});
+
+
+// Delete Product Cluster button
+document.getElementById('deleteProductCluster').addEventListener('click', function() {
+    // Find the table element
+    var table = document.getElementById('cluster_to_box_table');
+
+    // Get the number of rows in the table
+    var rowCount = table.rows.length;
+
+    // Check if there's more than one row (excluding the header row)
+    if (rowCount > 2) {
+        // Remove the last row
+        table.deleteRow(rowCount - 1);
+    } else {
+        // Alert the user that at least one row must remain
+        alert("Table must contain at least one product cluster.");
+    }
+});
+
+
+// Function to make sure no cell value can be higher than 100
+function addEventListenerToCell(cell) {
+    cell.addEventListener('input', function() {
+        // Get the entered value and convert it to a number
+        var enteredValue = parseFloat(cell.textContent.trim());
+
+        // Check if the entered value is greater than 100
+        if (!isNaN(enteredValue) && enteredValue > 100) {
+            // If the value is greater than 100, set it to 100
+            cell.textContent = '100';
+        }
+    });
+}
+
+var allocationCells = document.querySelectorAll('.allocation_cells');
+
+// Event listener to each existing cell
+allocationCells.forEach(function(cell) {
+    addEventListenerToCell(cell);
+});
+
+
+
+// Function to capture data
+function captureTableData() {
+    var tableRows = document.querySelectorAll('#cluster_to_box_table tbody tr');
+    var data = [['Product_Cluster', 'Cost_Box', 'Value']]; // Initialize with headers
+
+    // Find the header cells for Cost Box
+    var costBoxHeaders = document.querySelectorAll('#cluster_to_box_table thead th[contenteditable="true"]');
+
+    // Loop through each table row
+    for (var rowIdx = 0; rowIdx < tableRows.length; rowIdx++) {
+        var row = tableRows[rowIdx];
+        var cells = row.querySelectorAll('th[contenteditable="true"], td[contenteditable="true"]');
+
+        // Capture Product Cluster
+        var productClusterCell = cells[0];
+        var productCluster = productClusterCell ? productClusterCell.textContent.trim() : '';
+
+       // Check if Product Cluster is empty
+        if (productCluster === '') {
+            alert('Product Cluster cannot be empty');
+            return null; // Return null to indicate empty Product Cluster
+        }
+
+        // Loop through each cell in the row, starting from the second cell
+        for (var i = 1; i < cells.length; i++) {
+            // Capture Cost Box name from header
+            var costBoxName = costBoxHeaders[i - 1] ? costBoxHeaders[i - 1].textContent.trim() : '';
+
+            // Check if Cost Box name is empty
+            if (costBoxName === '') {
+                alert('Cost Box name cannot be empty');
+                return null; // Return null to indicate empty Cost Box
+            }
+
+            var cellValue = cells[i].textContent.trim();
+
+            // Replace empty strings with '0'
+            cellValue = cellValue === '' ? '0' : cellValue;
+
+            data.push([productCluster, costBoxName, cellValue]);
+        }
+    }
+    return data;
+}
+
+
+
+
+// Event listener for Save button
+document.getElementById('Save').addEventListener('click', function() {
+    sendDataToBackend();
+});
+
+
+function sendDataToBackend() {
+    // Capture table data
+    var tableData = captureTableData();
+
+    // Check if tableData is null (indicating empty Product Cluster or Cost Box)
+    if (tableData === null) {
+        // Return or do something to handle the empty case
+        return;
+    }
+
+    // Create a JSON object with the captured data
+    var jsonData = JSON.stringify(tableData);
+
+    // Retrieve project_id and quarry_id
+    const project_id = document.getElementById('project_id').value.trim();
+    const quarry_id = document.getElementById('quarry_id').value.trim();
+
+    // Construct the URL
+    const url = `/Existing_Projects/Data_Portal/P4P_Portal/Cluster_to_box_bridge/${project_id}/${quarry_id}/`;
+
+    // Get CSRF token
+    const csrftoken = getCookie('csrftoken');
+
+    // Create a new XMLHttpRequest
+    const xhr = new XMLHttpRequest();
+
+    // Open the request
+    xhr.open('POST', url, true);
+
+    // Set request headers
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('X-CSRFToken', csrftoken);
+
+    // Define the onload function
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            console.log('Data successfully sent to the backend!');
+            // Redirect to Product list page
+            window.location.href = `/Existing_Projects/Data_Portal/P4P_Portal/Product_list/${project_id}/${quarry_id}/`;
+        } else {
+            console.error('Error:', xhr.status);
+        }
+    };
+
+    // Send the JSON data
+    xhr.send(jsonData);
+}
+
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+
+{% endblock content %}
+

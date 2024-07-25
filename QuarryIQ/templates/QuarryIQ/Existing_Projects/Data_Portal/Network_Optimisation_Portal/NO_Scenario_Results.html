@@ -1,0 +1,478 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+
+<title>NO - Scenario Results</title>
+
+<h2>Network Optimisation - Scenario Results - {{ scenario_name }} - {{ scenario.get_optimisation_type_display }}</h2>
+<h4>Project: {{ project_name }} {{ project_time_period }}</h4>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+<table>
+    <tr>
+        <th class="empty"><button class="btn btn-outline-success" style="width: 250px;" id="downloadRawData">Download Raw Results</button></th>
+        <th class="empty"><button class="btn btn-outline-success" style="width: 250px; margin-left: 20px;" id="downloadCustomerData">Download Customer Data</button></th>
+        <th class="empty"><button class="btn btn-outline-success" style="width: 250px; margin-left: 20px;" id="downloadCustomerSwitch">Download Customer Switch</button></th>
+    </tr>
+    <tr>
+        <th class="empty"></th>
+    </tr>
+    <tr>
+        <th class="empty"><button class="btn btn-warning" style="width: 250px;" id="backToPortal" onclick="redirectToPortal()">Go Back To Net Opt Portal</button></th>
+    </tr>
+</table>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+
+<div class="table-container" style="max-width: 1800px;">
+    <table class="table">
+        <thead>
+            <tr>
+                <th style="vertical-align: middle;" colspan="4">Rebuilt P&L - {{ scenario_name }} - {{ scenario.get_optimisation_type_display }} - {{ project_name }} {{ project_time_period }}</th>
+            </tr>
+            <tr>
+                <th style="vertical-align: middle;">P&L Label</th>
+                <th style="vertical-align: middle;">Baseline</th>
+                <th style="vertical-align: middle;">Current Scenario</th>
+                <th style="vertical-align: middle;">Delta</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="vertical-align: middle;">Sales [t]</td>
+                <td style="vertical-align: middle;">{{ Baseline_PL_Items.NO_Baseline_Total_Sales }}</td>
+                <td style="vertical-align: middle;">{{ Scenario_PL_Items.NO_Scenario_Total_Sales }}</td>
+                <td style="vertical-align: middle;">{{ Delta_PL_Items.NO_Delta_Total_Sales }}</td>
+            </tr>
+            <tr>
+                <td style="vertical-align: middle;">Inventory Change [t]</td>
+                <td style="vertical-align: middle;">{{ Baseline_PL_Items.NO_Baseline_Inventory_Change }}</td>
+                <td style="vertical-align: middle;">{{ Scenario_PL_Items.NO_Scenario_Inventory_Change }}</td>
+                <td style="vertical-align: middle;">{{ Delta_PL_Items.NO_Delta_Inventory_Change }}</td>
+            </tr>
+            <tr>
+                <th style="vertical-align: middle;">Production [t]</th>
+                <th style="vertical-align: middle;">{{ Baseline_PL_Items.NO_Baseline_Total_Production }}</th>
+                <th style="vertical-align: middle;">{{ Scenario_PL_Items.NO_Scenario_Total_Production }}</th>
+                <th style="vertical-align: middle;">{{ Delta_PL_Items.NO_Delta_Total_Production }}</th>
+            </tr>
+            <tr>
+                <th class="empty"></th>
+            </tr>
+            <tr>
+                <td style="vertical-align: middle;">Gross Sales [{{ currency }}]</td>
+                <td style="vertical-align: middle;">{{ Baseline_PL_Items.NO_Baseline_Gross_Sales }}</td>
+                <td style="vertical-align: middle;">{{ Scenario_PL_Items.NO_Scenario_Gross_Sales }}</td>
+                <td style="vertical-align: middle;">{{ Delta_PL_Items.NO_Delta_Gross_Sales }}</td>
+            </tr>
+            <tr>
+                <td style="vertical-align: middle;">Distribution Cost [{{ currency }}]</td>
+                <td style="vertical-align: middle;">{{ Baseline_PL_Items.NO_Baseline_Distribution_Cost }}</td>
+                <td style="vertical-align: middle;">{{ Scenario_PL_Items.NO_Scenario_Distribution_Cost }}</td>
+                <td style="vertical-align: middle;">{{ Delta_PL_Items.NO_Delta_Distribution_Cost }}</td>
+            </tr>
+            <tr>
+                <th style="vertical-align: middle;">Net Sales [{{ currency }}]</th>
+                <th style="vertical-align: middle;">{{ Baseline_PL_Items.NO_Baseline_Net_Sales }}</th>
+                <th style="vertical-align: middle;">{{ Scenario_PL_Items.NO_Scenario_Net_Sales }}</th>
+                <th style="vertical-align: middle;">{{ Delta_PL_Items.NO_Delta_Net_Sales }}</th>
+            </tr>
+            <tr>
+                <th class="empty"></th>
+            </tr>
+            <tr>
+                <td style="vertical-align: middle;">Variable Cost [{{ currency }}]</td>
+                <td style="vertical-align: middle;">{{ Baseline_PL_Items.NO_Baseline_Variable_Cost }}</td>
+                <td style="vertical-align: middle;">{{ Scenario_PL_Items.NO_Scenario_Variable_Cost }}</td>
+                <td style="vertical-align: middle;">{{ Delta_PL_Items.NO_Delta_Variable_Cost }}</td>
+            </tr>
+            <tr>
+                <th style="vertical-align: middle;">Gross Margin [{{ currency }}]</th>
+                <th style="vertical-align: middle;">{{ Baseline_PL_Items.NO_Baseline_Gross_Margin }}</th>
+                <th style="vertical-align: middle;">{{ Scenario_PL_Items.NO_Scenario_Gross_Margin }}</th>
+                <th style="vertical-align: middle;">{{ Delta_PL_Items.NO_Delta_Gross_Margin }}</th>
+            </tr>
+            <tr>
+                <td style="vertical-align: middle; font-size: smaller; font-style: italic;">% on Gross Sales</td>
+                <td style="vertical-align: middle; font-size: smaller; font-style: italic;">{{ Baseline_PL_Items.NO_Baseline_Gross_Margin_Percentage }}%</td>
+                <td style="vertical-align: middle; font-size: smaller; font-style: italic;">{{ Scenario_PL_Items.NO_Scenario_Gross_Margin_Percentage }}%</td>
+                <td style="vertical-align: middle; font-size: smaller; font-style: italic;">{{ Delta_PL_Items.NO_Delta_Gross_Margin_Percentage }}%</td>
+            </tr>
+            <tr>
+                <th class="empty"></th>
+            </tr>
+            <tr>
+                <td style="vertical-align: middle;">Fixed Cost [{{ currency }}]</td>
+                <td style="vertical-align: middle;">{{ Baseline_PL_Items.NO_Baseline_Fixed_Cost }}</td>
+                <td style="vertical-align: middle;">{{ Scenario_PL_Items.NO_Scenario_Fixed_Cost }}</td>
+                <td style="vertical-align: middle;">{{ Delta_PL_Items.NO_Delta_Fixed_Cost }}</td>
+            </tr>
+            <tr>
+                <th style="vertical-align: middle;">EBIT [{{ currency }}]</th>
+                <th style="vertical-align: middle;">{{ Baseline_PL_Items.NO_Baseline_EBIT }}</th>
+                <th style="vertical-align: middle;">{{ Scenario_PL_Items.NO_Scenario_EBIT }}</th>
+                <th style="vertical-align: middle;">{{ Delta_PL_Items.NO_Delta_EBIT }}</th>
+            </tr>
+            <tr>
+                <td style="vertical-align: middle; font-size: smaller; font-style: italic;">% on Gross Sales</td>
+                <td style="vertical-align: middle; font-size: smaller; font-style: italic;">{{ Baseline_PL_Items.NO_Baseline_EBIT_Percentage }}%</td>
+                <td style="vertical-align: middle; font-size: smaller; font-style: italic;">{{ Scenario_PL_Items.NO_Scenario_EBIT_Percentage }}%</td>
+                <td style="vertical-align: middle; font-size: smaller; font-style: italic;">{{ Delta_PL_Items.NO_Delta_EBIT_Percentage }}%</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+    <div class="table-container" style="max-width: 1800px;">
+        {{ Impact_Breakdown_Chart|safe }}
+    </div>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+
+<table class="table">
+    <thead>
+        <tr>
+            <th colspan="5">General Outlook per Quarry - {{ scenario_name }} - {{ scenario.get_optimisation_type_display }} - {{ project_name }} {{ project_time_period }}</th>
+        </tr>
+        <tr>
+            <th style="vertical-align: middle;">Quarry</th>
+            <th style="vertical-align: middle;">Opening Hours [h]</th>
+            <th style="vertical-align: middle;">Operating Hours [h]</th>
+            <th style="vertical-align: middle;">Sales Volume [t]</th>
+            <th style="vertical-align: middle;">Stock Variation [t]</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for index, row in NO_Scenario_Outlook_df.iterrows %}
+        <tr>
+            <td style="vertical-align: middle;">{{ row.Quarries }}</td>
+            <td style="vertical-align: middle;">{{ row.Opening_Hours }}</td>
+            <td style="vertical-align: middle;">{{ row.Operating_Hours }}</td>
+            <td style="vertical-align: middle;">{{ row.Sales_Volume }}</td>
+            <td style="vertical-align: middle;">{{ row.Stocks_Variation }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+
+<table class="table">
+    <thead>
+        <tr>
+            <th style="vertical-align: middle;" colspan="12">Top 20 Customer Impact - {{ scenario_name }} - {{ scenario.get_optimisation_type_display }} - {{ project_name }} {{ project_time_period }}</th>
+        </tr>
+        <tr>
+            <th style="vertical-align: middle;" class="empty"></th>
+            <td class="space"></td>
+            <th style="vertical-align: middle;" colspan="4">Baseline</th>
+            <td class="space"></td>
+            <th style="vertical-align: middle;" colspan="4">Scenario</th>
+            <td class="space"></td>
+            <th style="vertical-align: middle;" class="empty"></th>
+        </tr>
+        <tr>
+            <th style="vertical-align: middle;">Customer</th>
+            <td class="space"></td>
+            <th style="vertical-align: middle;">Sales Volume [t]</th>
+            <th style="vertical-align: middle;">Gross Revenue [{{ currency }}]</th>
+            <th style="vertical-align: middle;">Transport Cost [{{ currency }}]</th>
+            <th style="vertical-align: middle;">Variable Cost [{{ currency }}]</th>
+            <td class="space"></td>
+            <th style="vertical-align: middle;">Sales Volume [t]</th>
+            <th style="vertical-align: middle;">Gross Revenue [{{ currency }}]</th>
+            <th style="vertical-align: middle;">Transport Cost [{{ currency }}]</th>
+            <th style="vertical-align: middle;">Variable Cost [{{ currency }}]</th>
+            <td class="space"></td>
+            <th style="vertical-align: middle;">Delta Gross Margin [{{ currency }}]</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for index, row in Customer_Delta_Baseline_Scenario_display.iterrows %}
+        <tr>
+            <td style="vertical-align: middle;">{{ row.Customers }}</td>
+            <td class="space"></td>
+            <td style="vertical-align: middle;">{{ row.Sales_Volume_Baseline }}</td>
+            <td style="vertical-align: middle;">{{ row.Gross_Revenue_Baseline }}</td>
+            <td style="vertical-align: middle;">{{ row.Transport_Cost_Baseline }}</td>
+            <td style="vertical-align: middle;">{{ row.Variable_Cost_Sales_Baseline }}</td>
+            <td class="space"></td>
+            <td style="vertical-align: middle;">{{ row.Sales_Volume_Scenario }}</td>
+            <td style="vertical-align: middle;">{{ row.Gross_Revenue_Scenario }}</td>
+            <td style="vertical-align: middle;">{{ row.Transport_Cost_Scenario }}</td>
+            <td style="vertical-align: middle;">{{ row.Variable_Cost_Sales_Scenario }}</td>
+            <td class="space"></td>
+            <td style="vertical-align: middle;">{{ row.Delta_GM_Sales_Baseline_Scenario }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+
+<input type="hidden" id="project_id" value="{{ project_id }}">
+<div class="download-data_NO_Scenario_Raw_Results_df" data-download="{{ NO_Scenario_Raw_Results_df }}"></div>
+<div class="download-data_NO_Scenario_Customer_Results_df" data-download="{{ NO_Scenario_Customer_Results_df }}"></div>
+<div class="download-data_Customer_Delta_Baseline_Scenario_df" data-download="{{ Customer_Delta_Baseline_Scenario_df }}"></div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+
+
+<script>
+function redirectToPortal() {
+    // Retrieve project_id and quarry_id values
+    var project_id = document.getElementById("project_id").value;
+
+    // Construct the URL
+    var url = `/Existing_Projects/Data_Portal/Network_Optimisation_Portal/${project_id}/`;
+
+    // Navigate to the URL
+    window.location.href = url;
+}
+
+
+
+document.getElementById('downloadRawData').addEventListener('click', function() {
+    // Function to convert array buffer to binary string
+    function s2ab(s) {
+        var buf = new ArrayBuffer(s.length);
+        var view = new Uint8Array(buf);
+        for (var i = 0; i != s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
+        return buf;
+    }
+
+    // Function to download Excel file
+    function downloadExcel(data, filename) {
+        var wb = XLSX.utils.book_new();
+
+        // Add a new worksheet with data
+        var ws = XLSX.utils.json_to_sheet(data);
+        XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+
+        // Generate a binary string from the XLSX file
+        var wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+
+        // Create a blob and download link
+        var blob = new Blob([s2ab(wbout)], { type: 'application/octet-stream' });
+        var url = window.URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        document.body.appendChild(a);
+        a.style = 'display: none';
+        a.href = url;
+        a.download = filename;
+        a.click();
+
+        // Clean up
+        window.URL.revokeObjectURL(url);
+    }
+
+    // Get data from data attributes
+    var NO_Scenario_data = document.querySelector('.download-data_NO_Scenario_Raw_Results_df').dataset.download;
+
+    // Ensure that data is not empty
+    if (!NO_Scenario_data) {
+        console.error("No data to download.");
+        return;
+    }
+
+    // Convert JSON to array of objects
+    var NO_Scenario_Raw_Results_df = JSON.parse(NO_Scenario_data);
+
+    // Combine columns and data into a single array of objects
+    var dataToDownload = NO_Scenario_Raw_Results_df.data.map((row, index) => {
+        var result = {};
+        NO_Scenario_Raw_Results_df.columns.forEach((col, colIndex) => {
+            result[col] = row[colIndex];
+        });
+        return result;
+    });
+
+    var project_name = '{{ project_name }}';
+    var project_time_period = '{{ project_time_period }}';
+    var scenario_name = '{{ scenario_name }}';
+    var scenario_optimisation_type = '{{ scenario.get_optimisation_type_display }}';
+
+    // Download Excel file
+    var filename = 'RawResults_' + project_name + '_' + project_time_period + '_' + scenario_name + '_' + scenario_optimisation_type + '.xlsx';
+    downloadExcel(dataToDownload, filename);
+});
+
+
+document.getElementById('downloadCustomerData').addEventListener('click', function() {
+    // Function to convert array buffer to binary string
+    function s2ab(s) {
+        var buf = new ArrayBuffer(s.length);
+        var view = new Uint8Array(buf);
+        for (var i = 0; i != s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
+        return buf;
+    }
+
+    // Function to download Excel file
+    function downloadExcel(data, filename) {
+        var wb = XLSX.utils.book_new();
+
+        // Add a new worksheet with data
+        var ws = XLSX.utils.json_to_sheet(data);
+        XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+
+        // Generate a binary string from the XLSX file
+        var wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+
+        // Create a blob and download link
+        var blob = new Blob([s2ab(wbout)], { type: 'application/octet-stream' });
+        var url = window.URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        document.body.appendChild(a);
+        a.style = 'display: none';
+        a.href = url;
+        a.download = filename;
+        a.click();
+
+        // Clean up
+        window.URL.revokeObjectURL(url);
+    }
+
+    // Get data from data attributes
+    var NO_Customer_data = document.querySelector('.download-data_NO_Scenario_Customer_Results_df').dataset.download;
+
+    // Ensure that data is not empty
+    if (!NO_Customer_data) {
+        console.error("No data to download.");
+        return;
+    }
+
+    // Convert JSON to array of objects
+    var NO_Scenario_Customer_Results_df = JSON.parse(NO_Customer_data);
+
+    // Combine columns and data into a single array of objects
+    var dataToDownload = NO_Scenario_Customer_Results_df.data.map((row, index) => {
+        var result = {};
+        NO_Scenario_Customer_Results_df.columns.forEach((col, colIndex) => {
+            result[col] = row[colIndex];
+        });
+        return result;
+    });
+
+    var project_name = '{{ project_name }}';
+    var project_time_period = '{{ project_time_period }}';
+    var scenario_name = '{{ scenario_name }}';
+    var scenario_optimisation_type = '{{ scenario.get_optimisation_type_display }}';
+
+    // Download Excel file
+    var filename = 'CustomerData_' + project_name + '_' + project_time_period + '_' + scenario_name + '_' + scenario_optimisation_type + '.xlsx';
+    downloadExcel(dataToDownload, filename);
+});
+
+
+document.getElementById('downloadCustomerSwitch').addEventListener('click', function() {
+    // Function to convert array buffer to binary string
+    function s2ab(s) {
+        var buf = new ArrayBuffer(s.length);
+        var view = new Uint8Array(buf);
+        for (var i = 0; i != s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
+        return buf;
+    }
+
+    // Function to download Excel file
+    function downloadExcel(data, filename) {
+        var wb = XLSX.utils.book_new();
+
+        // Add a new worksheet with data
+        var ws = XLSX.utils.json_to_sheet(data);
+        XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+
+        // Generate a binary string from the XLSX file
+        var wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+
+        // Create a blob and download link
+        var blob = new Blob([s2ab(wbout)], { type: 'application/octet-stream' });
+        var url = window.URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        document.body.appendChild(a);
+        a.style = 'display: none';
+        a.href = url;
+        a.download = filename;
+        a.click();
+
+        // Clean up
+        window.URL.revokeObjectURL(url);
+    }
+
+    // Get data from data attributes
+    var NO_Customer_switch = document.querySelector('.download-data_Customer_Delta_Baseline_Scenario_df').dataset.download;
+
+    // Ensure that data is not empty
+    if (!NO_Customer_switch) {
+        console.error("No data to download.");
+        return;
+    }
+
+    // Convert JSON to array of objects
+    var Customer_Delta_Baseline_Scenario_df = JSON.parse(NO_Customer_switch);
+
+    // Combine columns and data into a single array of objects
+    var dataToDownload = Customer_Delta_Baseline_Scenario_df.data.map((row, index) => {
+        var result = {};
+        Customer_Delta_Baseline_Scenario_df.columns.forEach((col, colIndex) => {
+            result[col] = row[colIndex];
+        });
+        return result;
+    });
+
+    var project_name = '{{ project_name }}';
+    var project_time_period = '{{ project_time_period }}';
+    var scenario_name = '{{ scenario_name }}';
+    var scenario_optimisation_type = '{{ scenario.get_optimisation_type_display }}';
+
+    // Download Excel file
+    var filename = 'CustomerSwitch_' + project_name + '_' + project_time_period + '_' + scenario_name + '_' + scenario_optimisation_type + '.xlsx';
+    downloadExcel(dataToDownload, filename);
+});
+
+</script>
+
+{% endblock content %}

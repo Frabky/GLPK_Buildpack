@@ -1,0 +1,100 @@
+{% extends 'QuarryIQ/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<title>Sagitta Nova - Contact</title>
+
+<!-- Contact Form Section -->
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <h2 class="text-center mb-4">Contact Us</h2>
+
+            <!-- Display success or error messages -->
+            {% if form.errors %}
+                <div class="alert alert-danger">
+                    Please correct the errors below.
+                </div>
+            {% elif request.method == 'POST' and not form.errors %}
+                <div class="alert alert-success">
+                    Your message has been sent successfully!
+                </div>
+            {% endif %}
+
+            {% if messages %}
+                <div class="alert alert-success">
+                    {% for message in messages %}
+                        {{ message }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <form method="post" action="">
+                {% csrf_token %}
+
+                <div class="form-group mb-3">
+                    <label for="{{ form.name.id_for_label }}"></label>
+                    <input
+                        type="text"
+                        name="name"
+                        id="{{ form.name.id_for_label }}"
+                        class="form-control"
+                        placeholder="Enter your name"
+                        value="{{ form.name.value|default_if_none:'' }}"
+                    >
+                    {% if form.name.errors %}
+                        <div class="text-danger">
+                            {% for error in form.name.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="{{ form.email.id_for_label }}"></label>
+                    <input
+                        type="email"
+                        name="email"
+                        id="{{ form.email.id_for_label }}"
+                        class="form-control"
+                        placeholder="Enter your email address"
+                        value="{{ form.email.value|default_if_none:'' }}"
+                    >
+                    {% if form.email.errors %}
+                        <div class="text-danger">
+                            {% for error in form.email.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="{{ form.message.id_for_label }}"></label>
+                    <textarea
+                        name="message"
+                        id="{{ form.message.id_for_label }}"
+                        class="form-control"
+                        placeholder="Message"
+                        style="height: 200px; width: 100%;"
+                    >{{ form.message.value|default_if_none:'' }}</textarea>
+                    {% if form.message.errors %}
+                        <div class="text-danger">
+                            {% for error in form.message.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                 <div class="text-center mt-3">
+                    <button type="submit" class="btn btn-outline-success" style="width: 250px; margin-top: 20px;">Send</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}

@@ -1,0 +1,59 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+
+<title>Sagitta Nova - Login</title>
+
+
+<div class="container-fluid d-flex justify-content-center align-items-center vh-100">
+    <div class="col-md-5">
+        <div class="card mt-5">
+            <div class="card-header">
+                <h2 class="text-center">Login</h2>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+                    <div class="form-group">
+                        <!-- Use Bootstrap's 'sr-only' class to visually hide the label -->
+                        <label for="id_email" class="sr-only">Email</label>
+                        <!-- Use placeholder attribute for default text -->
+                        <input type="email" name="username" id="id_email" class="form-control" placeholder="Email">
+                    </div>
+                    <div class="form-group">
+                        <!-- Use Bootstrap's 'sr-only' class to visually hide the label -->
+                        <label for="id_password" class="sr-only">Password</label>
+                        <!-- Use placeholder attribute for default text -->
+                        <input type="password" name="password" id="id_password" class="form-control" placeholder="Password">
+                    </div>
+                    <button type="submit" class="btn btn-warning btn-block">Login</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    // Add event listeners to input fields
+    document.getElementById('id_email').addEventListener('input', function() {
+        // Clear the placeholder text when user starts typing
+        this.placeholder = '';
+    });
+
+    document.getElementById('id_password').addEventListener('input', function() {
+        // Clear the placeholder text when user starts typing
+        this.placeholder = '';
+    });
+</script>
+
+
+
+
+
+{% endblock content %}

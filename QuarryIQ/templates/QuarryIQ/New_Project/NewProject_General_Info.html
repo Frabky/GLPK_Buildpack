@@ -1,0 +1,172 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+
+<title>Quarry IQ - New Project</title>
+
+<h2>Quarry IQ - New Project</h2>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+<div class="table-container" style="max-width: 800px;">
+    <table class="table">
+        <tr>
+            <th style="vertical-align: middle; width: 400px;">Company Name</th>
+            <td style="vertical-align: middle; width: 400px;">
+                <select class="custom-select" id="projectCompany" style="width: 100%;">
+                    {% for group in user_groups %}
+                        <option style="text-align: center;" value="{{ group }}">{{ group }}</option>
+                    {% endfor %}
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <th style="vertical-align: middle; width: 400px;">Project Name</th>
+            <td style="vertical-align: middle; width: 400px;" contenteditable="true" id="projectName"></td>
+        </tr>
+        <tr>
+            <th style="vertical-align: middle; width: 400px;">Considered Time Period</th>
+            <td style="vertical-align: middle; width: 400px;" contenteditable="true" id="timePeriod"></td>
+        </tr>
+        <tr>
+            <th style="vertical-align: middle; width: 400px;">Currency</th>
+            <td style="vertical-align: middle; width: 400px;" id="currency" contenteditable="true"></td>
+        </tr>
+        <tr>
+            <th style="vertical-align: middle; width: 400px;">Available EXW Customer Location</th>
+            <td style="vertical-align: middle; width: 400px;">
+                <select class="custom-select" id="EXWLocation">
+                    <option style="text-align: center;" value="Yes">Yes</option>
+                    <option style="text-align: center;" value="No" selected>No</option>
+                </select>
+            </td>
+        </tr>
+        <tr><td class="empty"></td></tr>
+        <tr>
+            <td class="empty">
+                    <button style="width: 250px;" id="save" class='btn btn-outline-success'>Save</button>
+            </td>
+        </tr>
+    </table>
+</div>
+
+    <input type="hidden" id="project_id" value="{{ project_id }}">
+
+<script>
+
+document.getElementById("save").addEventListener("click", sendDataToBackend);
+
+
+function extractData() {
+    // Get the selected project company from the dropdown
+    var projectCompanySelect = document.getElementById("projectCompany");
+    var projectCompany = projectCompanySelect ? projectCompanySelect.value : null;
+
+    // Get the content of the projectName, timePeriod, and currency fields
+    var projectNameElement = document.getElementById("projectName");
+    var timePeriodElement = document.getElementById("timePeriod");
+    var currencyElement = document.getElementById("currency");
+
+    var projectName = projectNameElement ? projectNameElement.textContent : null;
+    var timePeriod = timePeriodElement ? timePeriodElement.textContent : null;
+    var currency = currencyElement ? currencyElement.textContent : null;
+
+    // Get the selected EXWLocation from the dropdown
+    var EXWLocationSelect = document.getElementById("EXWLocation");
+    var EXWLocation = EXWLocationSelect ? EXWLocationSelect.value : null;
+
+    // Log all the values for debugging
+    console.log("Project Company:", projectCompany);
+    console.log("Project Name:", projectName);
+    console.log("Time Period:", timePeriod);
+    console.log("Currency:", currency);
+    console.log("EXW Location:", EXWLocation);
+
+    // Check if any required field is empty
+    if (!projectName.trim() || !timePeriod.trim() || !currency.trim()) {
+        return;
+    } else {
+        // Proceed with extracting data if the form is complete
+        return {
+            projectCompany: projectCompany ? projectCompany.trim() : null,
+            projectName: projectName.trim(),
+            timePeriod: timePeriod.trim(),
+            currency: currency.trim(),
+            EXWLocation: EXWLocation ? EXWLocation.trim() : null,
+        };
+    }
+}
+
+
+
+function sendDataToBackend() {
+    var data = extractData();
+
+    // Check if data is undefined (indicating incomplete form)
+    if (!data) {
+        // Alert the user to complete the form
+        alert("Please complete the form before proceeding.");
+        return; // Stop further execution
+    }
+
+    // Stringify the data
+    var jsonData = JSON.stringify(data);
+
+    // Retrieve project_id from hidden input field
+    var project_id = document.getElementById("project_id").value;
+
+    // Construct the URL
+    const url = `/New_Project/General_Info_bridge/${project_id}/`;
+
+    // Get CSRF token
+    const csrftoken = getCookie('csrftoken');
+
+    // Create a new XMLHttpRequest
+    const xhr = new XMLHttpRequest();
+
+    // Open the request
+    xhr.open('POST', url, true);
+
+    // Set request headers
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('X-CSRFToken', csrftoken);
+
+    // Define the onload function
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            console.log('Data successfully sent to the backend!');
+            // Redirect to Product Cleaning page
+            window.location.href = `/New_Project/Upload_Data/${project_id}/`;
+        } else {
+            console.error('Error:', xhr.status);
+        }
+    };
+
+    // Send the JSON data
+    xhr.send(jsonData);
+}
+
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+</script>
+
+{% endblock content %}

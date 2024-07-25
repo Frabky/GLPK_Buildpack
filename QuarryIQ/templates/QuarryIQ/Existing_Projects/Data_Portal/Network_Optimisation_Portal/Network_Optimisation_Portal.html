@@ -1,0 +1,132 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+<title>Quarry IQ - Network Optimisation Portal</title>
+
+<h2>Quarry IQ - Network Optimisation Portal</h2>
+<h4>Project: {{ project_name }} {{ project_time_period }}</h4>
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th style="vertical-align: middle;">Scenario Name</th>
+                <th style="vertical-align: middle;">Optimisation Type</th>
+                {% if is_editor %}
+                <th style="vertical-align: middle;">Edition</th>
+                {% endif %}
+                {% if NO_Baseline_Done %}
+                <th style="vertical-align: middle;">Results</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="vertical-align: middle;">Baseline</td>
+                <td style="vertical-align: middle;">Meeting All Sales</td>
+
+                {% if is_editor %}
+                <td style="vertical-align: middle;">
+                    <form action="{% url 'NO_Baseline_Information' project_id=project_data.project_id %}" method="get">
+                        <button type="submit" class="btn btn-outline-dark" style="width: 250px;">Edit</button>
+                    </form>
+                </td>
+                {% endif %}
+
+                {% if NO_Baseline_Done %}
+                <td style="vertical-align: middle;">
+                    <form action="{% url 'NO_Baseline_Results' project_id=project_data.project_id %}" method="get" onsubmit="showLoadingSpinner()">
+                        <button type="submit" class="btn btn-warning" style="width: 250px;">Results</button>
+                    </form>
+                </td>
+                {% endif %}
+            </tr>
+
+            {% for scenario in scenarios %}
+            <tr>
+                <td style="vertical-align: middle;">{{ scenario.scenario_name }}</td>
+
+                {% if not scenario.NO_Scenario_Done %}
+                <td style="vertical-align: middle;"></td>
+                {% else %}
+                <td style="vertical-align: middle;">{{ scenario.get_optimisation_type_display }}</td>
+                {% endif %}
+
+                {% if is_editor %}
+                <td style="vertical-align: middle;">
+                    <form action="{% url 'NO_Scenario_Information' project_id=project_data.project_id scenario_id=scenario.scenario_id %}" method="get">
+                        <button type="submit" class="btn btn-outline-dark" style="width: 250px;">Edit</button>
+                    </form>
+                </td>
+                {% endif %}
+
+                {% if not scenario.NO_Scenario_Done %}
+                <td style="vertical-align: middle;"></td>
+                {% else %}
+                <td style="vertical-align: middle;">
+                    <form action="{% url 'NO_Scenario_Results' project_id=project_data.project_id scenario_id=scenario.scenario_id %}" method="get" onsubmit="showLoadingSpinner()">
+                        <button type="submit" class="btn btn-warning" style="width: 250px;">Results</button>
+                    </form>
+                </td>
+                {% endif %}
+
+                {% if is_editor %}
+                <td style="vertical-align: middle;">
+                    <form action="{% url 'Network_Optimisation_Clear_Scenario' project_id=project_data.project_id scenario_id=scenario.scenario_id %}" method="post" onsubmit="confirmDelete(event)">
+                        {% csrf_token %}
+                        <input type="hidden" name="project_id" value="{{ project_data.project_id }}">
+                        <input type="hidden" name="scenario_id" value="{{ scenario.scenario_id }}">
+                        <button type="submit" class="btn btn-outline-danger" style="width: 250px;">Delete Scenario</button>
+                    </form>
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+
+            <tr><td class="empty"></td></tr>
+            {% if is_editor and NO_Baseline_Done %}
+            <tr>
+                <td class="empty" style="vertical-align: middle;">
+                    <form id="scenarioForm" method="post" action="{% url 'Network_Optimisation_Portal' project_id=project_data.project_id %}" style="display: none;">
+                        {% csrf_token %}
+                        <input type="hidden" id="scenarioNameInput" name="scenario_name">
+                    </form>
+                    <button type="button" class="btn btn-outline-success" style="width: 250px;" onclick="promptScenarioName()">Add New Scenario</button>
+                </td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+
+<input type="hidden" id="scenarioCount" value="{{ scenarios.count }}">
+
+
+<script>
+function promptScenarioName() {
+    var scenarioCount = document.getElementById('scenarioCount').value;
+    if (scenarioCount >= 10) {
+        alert('You cannot create more than 10 scenarios.');
+        return;
+    }
+
+    var scenarioName = prompt("Please specify scenario name:");
+    if (scenarioName) {
+        document.getElementById('scenarioNameInput').value = scenarioName;
+        document.getElementById('scenarioForm').submit();
+    }
+}
+
+function confirmDelete(event) {
+        if (!confirm("Are you sure you want to delete this scenario?")) {
+            event.preventDefault();
+        }
+    }
+</script>
+
+
+{% endblock content %}

@@ -1,0 +1,57 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+    <title>Quarry IQ - Streams map Portal</title>
+
+    <h2>Quarry IQ - Streams map Portal</h2>
+    <h4>Project: {{ project_name }} {{ project_time_period }}</h4>
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+<div class="table-container" style="max-width: 1200px;">
+<table class="table">
+    <thead>
+        <tr>
+            <th>Delivery Type</th>
+            <th>Volume [t]</th>
+            <th>Volume Proportion [-]</th>
+            <th># of Customer [-]</th>
+            <th>Mean Volume per Customer [t]</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for index, row in incoterm_sales_df.iterrows %}
+        <tr>
+            <td>
+                <form action="{% url 'Streams_maps_baseline_incoterm_view' project_id=project_id incoterm=row.Incoterm %}" method="get" target="_blank">
+                    <button style="width: 250px;" class='btn btn-outline-dark' type="submit">{{ row.Incoterm }}</button>
+                </form>
+            </td>
+            <td style="vertical-align: middle;">{{ row.Sales_Volume }}</td>
+            <td style="vertical-align: middle;">{{ row.Percentage }}%</td>
+            <td style="vertical-align: middle;">{{ row.Unique_Customers }}</td>
+            <td style="vertical-align: middle;">{{ row.Mean_Volume }}</td>
+        </tr>
+        {% endfor %}
+        <tr>
+            <th>
+                <form action="{% url 'Streamsmap_baseline_all_incoterms' project_id=project_id %}" method="get" target="_blank">
+                    <button style="width: 250px;" class='btn btn-outline-dark' type="submit">All Deliveries</button>
+                </form>
+            </th>
+            <th style="vertical-align: middle;">{{ total_volume }}</th>
+            <th style="vertical-align: middle;">100%</th>
+            <th style="vertical-align: middle;">{{ unique_customers }}</th>
+            <th style="vertical-align: middle;">{{ mean_per_customer }}</th>
+        </tr>
+    </tbody>
+</table>
+</div>
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+{% endblock content %}

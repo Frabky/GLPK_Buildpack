@@ -1,0 +1,625 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+
+<title>P4P - Product List</title>
+
+<h2>Production for Profit - Product List</h2>
+<h4>Project: {{ project_name }} {{ project_time_period }}</h4>
+<h4>Quarry: {{ quarry_name }}</h4>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+    <table class="table" id="table">
+        <thead>
+            <tr>
+                <th style="vertical-align: middle;">Product</th>
+                <th style="vertical-align: middle;">Sales Quantity [t]</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;">Product Cluster</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;">Aggregate Levy [{{ currency }}/t]</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;">Opening Stock [t]</th>
+                <th style="vertical-align: middle;">Closing Stock [t]</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;">Production Volume [t]</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% if productListFull_df.empty and clusterToBox_df_change %} <!-- New P4P -->
+
+            {% for index, row in productSalesVolume_df.iterrows %}
+            <tr>
+                <td class="productName" style="vertical-align: middle;">{{ row.Product }}</td>
+                <td class="salesVolume" style="vertical-align: middle;">{{ row.Sales_Volume }}</td>
+                <td class="space"></td>
+                <td>
+                    <select class="custom-select" name="productCluster" style="width: 100%;">
+                        <option value="" disabled selected style="text-align: center;">Choose...</option>
+                        {% for cluster in unique_product_clusters %}
+                        <option value="{{ cluster }}" style="text-align: center;">{{ cluster }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td class="space"></td>
+                <td style="vertical-align: middle;" class="aggLevy" contenteditable="true" onkeypress="return isFloat(event)"></td>
+                <td class="space"></td>
+                <td style="vertical-align: middle;" class="openingStock" contenteditable="true" onkeypress="return isNumber(event)"></td>
+                <td style="vertical-align: middle;" class="closingStock" contenteditable="true" onkeypress="return isNumber(event)"></td>
+                <td class="space"></td>
+                <td style="vertical-align: middle;" class="productionVolume"></td>
+            </tr>
+            {% endfor %}
+
+            <tr>
+                <th style="vertical-align: middle;">Total</th>
+                <th style="vertical-align: middle;" class="sumSalesVolume"></th>
+                <td class="space"></td>
+                <th class="empty"></th>
+                <td class="space"></td>
+                <th class="empty"></th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;" class="sumOpeningStock"></th>
+                <th style="vertical-align: middle;" class="sumClosingStock"></th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;" class="sumProductionVolume"></th>
+            </tr>
+
+        {% else %}
+
+            {% if not productListFull_df.empty and not clusterToBox_df_change %} <!-- Existing P4P / No Change in Cluster to Box -->
+
+            {% for index, row in productListFull_df.iterrows %}
+            <tr>
+                <td style="vertical-align: middle;" class="productName">{{ row.Product }}</td>
+                <td style="vertical-align: middle;" class="salesVolume">{{ row.Sales_Volume }}</td>
+                <td class="space"></td>
+                <td>
+                    <select class="custom-select" name="productCluster" style="width: 100%;">
+                        <option disabled selected style="text-align: center;">{{ row.Product_Cluster }}</option>
+                        {% for cluster in unique_product_clusters %}
+                        <option value="{{ cluster }}" style="text-align: center;">{{ cluster }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td class="space"></td>
+                <td style="vertical-align: middle;" class="aggLevy" contenteditable="true" onkeypress="return isFloat(event)">{{ row.Aggregate_Levy }}</td>
+                <td class="space"></td>
+                <td style="vertical-align: middle;" class="openingStock" contenteditable="true" onkeypress="return isNumber(event)">{{ row.Opening_Stock }}</td>
+                <td style="vertical-align: middle;" class="closingStock" contenteditable="true" onkeypress="return isNumber(event)">{{ row.Closing_Stock }}</td>
+                <td class="space"></td>
+                <td style="vertical-align: middle;" class="productionVolume"></td>
+            </tr>
+            {% endfor %}
+
+            <tr>
+                <th style="vertical-align: middle;">Total</th>
+                <th style="vertical-align: middle;" class="sumSalesVolume"></th>
+                <td class="space"></td>
+                <th class="empty"></th>
+                <td class="space"></td>
+                <th class="empty"></th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;" class="sumOpeningStock"></th>
+                <th style="vertical-align: middle;" class="sumClosingStock"></th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;" class="sumProductionVolume"></th>
+            </tr>
+
+            {% else %} <!-- Existing P4P / Change in Cluster to Box -->
+
+            {% for index, row in productListFull_df.iterrows %}
+            <tr>
+                <td style="vertical-align: middle;" class="productName">{{ row.Product }}</td>
+                <td style="vertical-align: middle;" class="salesVolume">{{ row.Sales_Volume }}</td>
+                <td class="space"></td>
+                <td>
+                    <select class="custom-select" name="productCluster" style="width: 100%;">
+                        <option value="" disabled selected style="text-align: center;">Choose...</option>
+                        {% for cluster in unique_product_clusters %}
+                        <option value="{{ cluster }}" style="text-align: center;">{{ cluster }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td class="space"></td>
+                <td style="vertical-align: middle;" class="aggLevy" contenteditable="true" onkeypress="return isFloat(event)">{{ row.Aggregate_Levy }}</td>
+                <td class="space"></td>
+                <td style="vertical-align: middle;" class="openingStock" contenteditable="true" onkeypress="return isNumber(event)">{{ row.Opening_Stock }}</td>
+                <td style="vertical-align: middle;" class="closingStock" contenteditable="true" onkeypress="return isNumber(event)">{{ row.Closing_Stock }}</td>
+                <td class="space"></td>
+                <td style="vertical-align: middle;" class="productionVolume"></td>
+            </tr>
+            {% endfor %}
+
+            <tr>
+                <th style="vertical-align: middle;">Total</th>
+                <th style="vertical-align: middle;" class="sumSalesVolume"></th>
+                <td class="space"></td>
+                <th class="empty"></th>
+                <td class="space"></td>
+                <th class="empty"></th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;" class="sumOpeningStock"></th>
+                <th style="vertical-align: middle;" class="sumClosingStock"></th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;" class="sumProductionVolume"></th>
+            </tr>
+
+            {% endif %}
+        {% endif %}
+         </tbody>
+    </table>
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+
+<button class="btn btn-warning" style="width: 250px;" id="Save">Save</button>
+
+
+<input type="hidden" id="project_id" value="{{ project_id }}">
+<input type="hidden" id="quarry_id" value="{{ quarry_id }}">
+
+
+<script>
+
+function isFloat(evt) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+    if (charCode === 46) { // If the character is "."
+        var input = evt.target.textContent;
+        if (input.indexOf('.') !== -1) {
+            return false; // Only allow one decimal point
+        }
+    } else if (charCode !== 8 && (charCode < 48 || charCode > 57)) {
+        return false; // Only allow digits and backspace
+    }
+    return true;
+}
+
+function isNumber(evt) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+
+    if (charCode === 45) { // If the character is "-"
+        return false; // Prevent input of "-"
+    } else if (charCode === 8) { // If the character is backspace
+        return true; // Allow backspace
+    } else if (charCode !== 43 && (charCode < 48 || charCode > 57)) {
+        return false; // Only allow digits and backspace
+    }
+    return true;
+}
+
+
+// == Sum of Sales Volume ==
+function calculateSalesVolumeSum() {
+    var volumeCells = document.querySelectorAll('.salesVolume');
+    var sum = 0;
+
+    // Loop through each volume cell
+    volumeCells.forEach(function(cell) {
+        // Remove commas and parse the sales volume as a number, then add it to the sum
+        sum += parseFloat(cell.textContent.replace(/,/g, ''));
+    });
+
+    // Find the element with class "sumSalesVolume"
+    var sumVolumeCell = document.querySelector('.sumSalesVolume');
+
+    // Set the sum as the text content of the sumSalesVolumeCell after formatting it with commas for thousands separator
+    sumVolumeCell.textContent = sum.toLocaleString('en-US', {useGrouping: true});
+}
+
+// Call the function to calculate and display the sum when the DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    calculateSalesVolumeSum();
+    calculateProductionVolume();
+    calculateProductionVolumeSum();
+    calculateOpeningStockSum();
+    calculateClosingStockSum();
+});
+
+
+// == Sum of Opening Stock ==
+function calculateOpeningStockSum() {
+    var volumeCells = document.querySelectorAll('.openingStock');
+    var sum = 0;
+
+    // Loop through each volume cell
+    volumeCells.forEach(function(cell) {
+        // Remove commas and parse the opening stock as a number, then add it to the sum
+        var value = parseFloat(cell.textContent.replace(/,/g, ''));
+        if (!isNaN(value)) {
+            sum += value;
+        }
+    });
+
+    // Find the element with class "sumOpeningStock"
+    var sumVolumeCell = document.querySelector('.sumOpeningStock');
+
+    // Set the sum as the text content of the sumOpeningStock cell after formatting it with commas for thousands separator
+    sumVolumeCell.textContent = sum.toLocaleString('en-US', {useGrouping: true});
+}
+
+// Add event listeners for calculateOpeningStockSum
+document.querySelectorAll('.openingStock').forEach(function(cell) {
+    cell.addEventListener('input', calculateOpeningStockSum);
+});
+
+
+// == Sum of Closing Stock ==
+function calculateClosingStockSum() {
+    var volumeCells = document.querySelectorAll('.closingStock');
+    var sum = 0;
+
+    // Loop through each volume cell
+    volumeCells.forEach(function(cell) {
+        // Remove commas and parse the opening stock as a number, then add it to the sum
+        var value = parseFloat(cell.textContent.replace(/,/g, ''));
+        if (!isNaN(value)) {
+            sum += value;
+        }
+    });
+
+    // Find the element with class "sumClosingStock"
+    var sumVolumeCell = document.querySelector('.sumClosingStock');
+
+    // Set the sum as the text content of the sumOpeningStock cell after formatting it with commas for thousands separator
+    sumVolumeCell.textContent = sum.toLocaleString('en-US', {useGrouping: true});
+}
+
+// Add event listeners for calculateOpeningStockSum
+document.querySelectorAll('.closingStock').forEach(function(cell) {
+    cell.addEventListener('input', calculateClosingStockSum);
+});
+
+
+
+// == Production Volume Calculation ==
+function calculateProductionVolume() {
+    var salesVolumeCells = document.querySelectorAll('.salesVolume');
+    var closingStockCells = document.querySelectorAll('.closingStock');
+    var openingStockCells = document.querySelectorAll('.openingStock');
+    var productionVolumeCells = document.querySelectorAll('.productionVolume');
+
+    // Loop through each row
+    for (var i = 0; i < salesVolumeCells.length; i++) {
+        // Get the sales volume, closing stock, and opening stock values for the current row
+        var salesVolume = parseFloat(salesVolumeCells[i].textContent.replace(/,/g, '') || 0);
+        var closingStock = parseFloat(closingStockCells[i].textContent.replace(/,/g, '') || 0);
+        var openingStock = parseFloat(openingStockCells[i].textContent.replace(/,/g, '') || 0);
+
+        // Calculate the production volume
+        var productionVolume = salesVolume + closingStock - openingStock;
+
+        // Set the production volume in the corresponding cell
+        productionVolumeCells[i].textContent = productionVolume.toLocaleString('en-US', {useGrouping: true});
+    }
+}
+
+// Add event listeners for changes in sales volume, closing stock, and opening stock cells
+document.querySelectorAll('.closingStock, .openingStock').forEach(function(cell) {
+    cell.addEventListener('input', calculateProductionVolume);
+});
+
+
+
+// == Sum of Production Volume ==
+function calculateProductionVolumeSum() {
+    var volumeCells = document.querySelectorAll('.productionVolume');
+    var sum = 0;
+
+    // Loop through each volume cell
+    volumeCells.forEach(function(cell) {
+        // Remove commas and parse the opening stock as a number, then add it to the sum
+        var value = parseFloat(cell.textContent.replace(/,/g, ''));
+        if (!isNaN(value)) {
+            sum += value;
+        }
+    });
+
+    // Find the element with class "sumProductionVolume"
+    var sumVolumeCell = document.querySelector('.sumProductionVolume');
+
+    // Set the sum as the text content of the sumOpeningStock cell after formatting it with commas for thousands separator
+    sumVolumeCell.textContent = sum.toLocaleString('en-US', {useGrouping: true});
+}
+
+// Add event listeners for calculateOpeningStockSum
+document.querySelectorAll('.closingStock, .openingStock').forEach(function(cell) {
+    cell.addEventListener('input', calculateProductionVolumeSum);
+});
+
+
+
+
+// Add event listeners for Save button
+document.getElementById('Save').addEventListener('click', function() {
+    // Check if all product clusters have been selected
+    var allSelected = true;
+    var selectElements = document.querySelectorAll('select[name="productCluster"]');
+    selectElements.forEach(function(selectElement) {
+        if (selectElement.value === "") {
+            allSelected = false;
+            return; // Exit forEach loop early if any select is not selected
+        }
+    });
+
+    // If all product clusters have been selected, proceed with extracting data
+    if (allSelected) {
+        sendDataToBackend();
+    } else {
+        alert("Product cluster must be selected for all products.");
+    }
+});
+
+
+
+// == Function to extract productAggLevy ==
+function extractProductAggLevy() {
+    // Initialize an array to store data, including headers
+    var data = [['Product', 'Aggregate_Levy']];
+
+    // Get all rows in the tbody
+    var rows = document.querySelectorAll('#table tbody tr');
+
+    // Regular expression to extract numeric values
+    var numericRegex = /[+-]?\d+(\.\d+)?/g;
+
+    // Loop through each row
+    rows.forEach(function(row) {
+        // Get productName and aggregateLevy cells from the row
+        var productNameCell = row.querySelector('.productName');
+        var aggregateLevyCell = row.querySelector('.aggLevy');
+
+        // Check if productName and aggregateLevy cells exist
+        if (productNameCell && aggregateLevyCell) {
+            var productName = productNameCell.textContent.trim();
+            var aggregateLevyContent = aggregateLevyCell.textContent.trim();
+
+            // Extract numeric value using regular expression
+            var aggregateLevyMatches = aggregateLevyContent.match(numericRegex);
+            var aggregateLevy = aggregateLevyMatches ? aggregateLevyMatches[0] : '0';
+
+            // Push data into the data array
+            data.push([productName, aggregateLevy]);
+        } else {
+            console.log('Product name or Aggregate Levy cell not found in row:', row);
+        }
+    });
+
+    return data;
+}
+
+
+// == Function to extract productProdVolume ==
+function extractProductProdVolume() {
+    // Initialize an array to store data, including headers
+    var data = [['Product', 'Production Volume']];
+
+    // Get all rows in the tbody
+    var rows = document.querySelectorAll('#table tbody tr');
+
+    // Regular expression to extract numeric values and removing ","
+    var numericRegex = /[+-]?(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d+)?/g;
+
+    // Loop through each row
+    rows.forEach(function(row) {
+        // Get productName and productionVolume cells from the row
+        var productNameCell = row.querySelector('.productName');
+        var productionVolumeCell = row.querySelector('.productionVolume');
+
+        // Check if productName and productionVolume cells exist
+        if (productNameCell && productionVolumeCell) {
+            var productName = productNameCell.textContent.trim();
+            var productionVolumeContent = productionVolumeCell.textContent.trim();
+
+            // Extract numeric value using regular expression
+            var productionVolumeMatches = productionVolumeContent.match(numericRegex);
+            var productionVolume = productionVolumeMatches ? productionVolumeMatches[0] : '0';
+
+            // Push data into the data array
+            data.push([productName, productionVolume]);
+        } else {
+            console.log('Product name or Aggregate Levy cell not found in row:', row);
+        }
+    });
+
+    return data;
+}
+
+
+
+// == Function to extract productProductCluster ==
+function extractProductProductCluster() {
+    // Initialize an array to store data, including headers
+    var data = [['Product', 'Product_Cluster']];
+
+    // Get all rows in the tbody
+    var rows = document.querySelectorAll('#table tbody tr');
+
+    // Loop through each row
+    rows.forEach(function(row) {
+        // Get product and productCluster cells from the row
+        var productCell = row.querySelector('.productName');
+        var clusterCell = row.querySelector('select[name="productCluster"]');
+
+        // Check if product and productCluster cells exist
+        if (productCell && clusterCell) {
+            var product = productCell.textContent.trim();
+            var productCluster = clusterCell.value;
+
+            // Push data into the data array
+            data.push([product, productCluster]);
+        } else {
+            console.log('Product or Product Cluster cell not found in row:', row);
+        }
+    });
+
+    return data;
+}
+
+
+
+// == Function to extract productClusterProdVolume ==
+function extractProductClusterProdVolume() {
+    // Initialize an array to store data, including headers
+    var data = [['Product_Cluster', 'Production Volume']];
+
+    // Get all rows in the tbody
+    var rows = document.querySelectorAll('#table tbody tr');
+
+    // Regular expression to extract numeric values and removing ","
+    var numericRegex = /[+-]?(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d+)?/g;
+
+    // Loop through each row
+    rows.forEach(function(row) {
+        // Get productCluster and productionVolume cells from the row
+        var clusterCell = row.querySelector('select[name="productCluster"]');
+        var productionVolumeCell = row.querySelector('.productionVolume');
+
+        // Check if productCluster and productionVolume cells exist
+        if (clusterCell && productionVolumeCell) {
+            // Get the selected option value of productCluster
+            var clusterName = clusterCell.value;
+            var productionVolumeContent = productionVolumeCell.textContent.trim();
+
+            // Extract numeric value using regular expression
+            var productionVolumeMatches = productionVolumeContent.match(numericRegex);
+            var productionVolume = productionVolumeMatches ? productionVolumeMatches[0] : '0';
+
+            // Push data into the data array
+            data.push([clusterName, productionVolume]);
+        } else {
+            console.log('Product Cluster or Production Volume cell not found in row:', row);
+        }
+    });
+
+    return data;
+}
+
+
+// == Function to extract productStocks ==
+function extractProductStocks() {
+    // Initialize an array to store data, including headers
+    var data = [['Product', 'Opening_Stock', 'Closing_Stock']];
+
+    // Get all rows in the tbody
+    var rows = document.querySelectorAll('#table tbody tr');
+
+    // Regular expression to extract numeric values
+    var numericRegex = /[+-]?\d+(\.\d+)?/g;
+
+    // Loop through each row
+    rows.forEach(function(row) {
+        // Get productName, openingStock, and closingStock cells from the row
+        var productNameCell = row.querySelector('.productName');
+        var openingStockCell = row.querySelector('.openingStock');
+        var closingStockCell = row.querySelector('.closingStock');
+
+        // Check if productName, openingStock, and closingStock cells exist
+        if (productNameCell && openingStockCell && closingStockCell) {
+            // Extract product name, opening stock, and closing stock
+            var productName = productNameCell.innerText.trim();
+            var openingStockContent = openingStockCell.innerText.trim();
+            var closingStockContent = closingStockCell.innerText.trim();
+
+            // Extract numeric values using regular expressions
+            var openingStockMatches = openingStockContent.match(numericRegex);
+            var openingStock = openingStockMatches ? openingStockMatches[0] : '0';
+            var closingStockMatches = closingStockContent.match(numericRegex);
+            var closingStock = closingStockMatches ? closingStockMatches[0] : '0';
+
+            // Push data into the data array
+            data.push([productName, openingStock, closingStock]);
+        } else {
+            console.log('Required data not found in row:', row);
+        }
+    });
+
+    return data;
+}
+
+
+
+
+function sendDataToBackend() {
+    // Call functions to get data
+    var productAggLevy = extractProductAggLevy();
+    var productProdVolume = extractProductProdVolume();
+    var productProductCluster = extractProductProductCluster();
+    var productClusterProdVolume = extractProductClusterProdVolume();
+    var productStocks = extractProductStocks();
+
+    // Create an object to hold all the data
+    var data = {
+        productAggLevy: productAggLevy,
+        productProdVolume: productProdVolume,
+        productProductCluster: productProductCluster,
+        productClusterProdVolume: productClusterProdVolume,
+        productStocks : productStocks
+    };
+
+    // Stringify the data
+    var jsonData = JSON.stringify(data);
+
+
+    // Retrieve project_id and quarry_id
+    const project_id = document.getElementById('project_id').value.trim();
+    const quarry_id = document.getElementById('quarry_id').value.trim();
+
+    // Construct the URL
+    const url = `/Existing_Projects/Data_Portal/P4P_Portal/Product_list_bridge/${project_id}/${quarry_id}/`;
+
+    // Get CSRF token
+    const csrftoken = getCookie('csrftoken');
+
+    // Create a new XMLHttpRequest
+    const xhr = new XMLHttpRequest();
+
+    // Open the request
+    xhr.open('POST', url, true);
+
+    // Set request headers
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('X-CSRFToken', csrftoken);
+
+    // Define the onload function
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            console.log('Data successfully sent to the backend!');
+            // Redirect to Product list page
+            window.location.href = `/Existing_Projects/Data_Portal/P4P_Portal/PL_allocation/${project_id}/${quarry_id}/`;
+        } else {
+            console.error('Error:', xhr.status);
+        }
+    };
+
+    // Send the JSON data
+    xhr.send(jsonData);
+}
+
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+</script>
+
+{% endblock content %}

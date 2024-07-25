@@ -1,0 +1,306 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+
+<title>P4P - Results</title>
+
+<h2>Production for Profit - Results</h2>
+<h4>Project: {{ project_name }} {{ project_time_period }}</h4>
+<h4>Quarry: {{ quarry_name }}</h4>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+
+<button class="btn btn-outline-success" id="downloadData" style="width: 250px;">Download Results</button>
+<button class="btn btn-warning" id="backToPortal" style="width: 250px; margin-left: 20px;">Go Back To P4P Portal</button>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+    <table class="table">
+        {% with cost_box_count=summaryTableCostBox_dict|length %}
+        <thead>
+            <tr>
+                <th class="empty"></th>
+                <th style="vertical-align: middle;" colspan="{{ cost_box_count|add:0 }}">Cost Boxes Value</th>
+            </tr>
+            <tr>
+                <th style="width: 230px; vertical-align: middle;" class="empty"></th>
+                {% for cost_box, _ in summaryTableCostBox_dict.items %}
+                    <th style="width: 125px; vertical-align: middle;">{{ cost_box }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        {% endwith %}
+
+            <tr>
+                <th style="vertical-align: middle;">Cost Box Value [{{ currency }}]</th>
+                {% for _, values in summaryTableCostBox_dict.items %}
+                    <td style="vertical-align: middle;">{{ values.Total }}</td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <th style="vertical-align: middle;">Cost Box Production Volume [t]</th>
+                {% for _, values in summaryTableCostBox_dict.items %}
+                    <td style="vertical-align: middle;">{{ values.Cost_Box_Prod_Volume }}</td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <th style="vertical-align: middle;">Cost Box Value [{{ currency }}/t]</th>
+                {% for _, values in summaryTableCostBox_dict.items %}
+                    <td style="vertical-align: middle;">{{ values.Total_per_t }}</td>
+                {% endfor %}
+            </tr>
+
+
+        <tr><th class="empty"></th></tr>
+        <tr><th class="empty"></th></tr>
+        <tr><th class="empty"></th></tr>
+
+        {% with cost_box_count=summaryTableCostBox_dict|length %}
+        <thead>
+            <tr>
+                <th class="empty"></th>
+                <th style="vertical-align: middle;" colspan="{{ cost_box_count|add:0 }}">Cost Boxes</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;" colspan=3>Product Cluster Production Cost [{{ currency }}/t]</th>
+            </tr>
+            <tr>
+                <th>Product Cluster</th>
+                {% for cost_box, _ in summaryTableCostBox_dict.items %}
+                    <th style="vertical-align: middle;">{{ cost_box }}</th>
+                {% endfor %}
+                <td class="space"></td>
+                <th style="width: 170px; vertical-align: middle;">Total</th>
+                <th style="width: 170px; vertical-align: middle;">Variable</th>
+                <th style="width: 170px; vertical-align: middle;">Fixed</th>
+            </tr>
+        {% endwith %}
+        </thead>
+            {% for product_cluster, cluster_values in productClusterData.items %}
+            <tr>
+                <td style="vertical-align: middle;">{{ product_cluster }}</td>
+                    {% for cost_box, cluster_total_per_t in cluster_values.items %}
+                <td style="vertical-align: middle;">{{ cluster_total_per_t }}</td>
+                {% endfor %}
+                <td class="space"></td>
+                {% for _, row in summaryTableCluster_df.iterrows %}
+                {% if row.Product_Cluster == product_cluster %}
+                <td style="vertical-align: middle;">{{ row.Cluster_Total_per_t }}</td>
+                <td style="vertical-align: middle;">{{ row.Cluster_Variable_per_t }}</td>
+                <td style="vertical-align: middle;">{{ row.Cluster_Fixed_per_t }}</td>
+                {% endif %}
+                {% endfor %}
+            </tr>
+            {% endfor %}
+    </table>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th colspan="8">Product Average Margin</th>
+            </tr>
+            <tr style="vertical-align: middle;">
+                <th style="vertical-align: middle;">Product</th>
+                <th style="vertical-align: middle;">Product Cluster</th>
+                <th style="vertical-align: middle;">Sales Volume [t]</th>
+                <th style="vertical-align: middle;">Production Volume [t]</th>
+                <th style="vertical-align: middle;">Av. Sales Price [{{ currency }}/t]</th>
+                <th style="vertical-align: middle;">Aggregate Levy [{{ currency }}/t]</th>
+                <th style="vertical-align: middle;">Gross Margin [{{ currency }}/t]</th>
+                <th style="vertical-align: middle;">Total Margin [{{ currency }}/t]</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for index, row in summaryTableGeneral_df.iterrows %}
+            <tr {% if row.GM <= 0 %} style="color: #dc3545;" {% endif %}>
+                <td style="vertical-align: middle;">{{ row.Product }}</td>
+                <td style="vertical-align: middle;">{{ row.Product_Cluster }}</td>
+                <td style="vertical-align: middle;">{{ row.Sales_Volume }}</td>
+                <td style="vertical-align: middle;">{{ row.Production_Volume }}</td>
+                <td style="vertical-align: middle;">{{ row.ASP }}</td>
+                <td style="vertical-align: middle;">{{ row.Agg_levy }}</td>
+                <td style="vertical-align: middle;">{{ row.GM }}</td>
+                <td style="vertical-align: middle;">{{ row.TM }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+        {{ plotly_Sales_Price|safe }}
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+    {{ plotly_TM|safe }}
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+    {{ plotly_GM|safe }}
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+<div class="table-container" style="max-width: 700px;">
+    <table class="table">
+        <thead>
+            <tr>
+                <th colspan=2>Negative Gross Margin Summary</th>
+            </tr>
+            <tr>
+                <td style="vertical-align: middle;"># Customer with Negative Gross Margin</td>
+                <td style="vertical-align: middle;">{{ count_neg_GM }}</td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="vertical-align: middle;">Negative Gross Margin Total Impact</td>
+                <td style="vertical-align: middle;">{{ sum_neg_GM }} {{ currency }}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th colspan=8>Negative Margin Details per Customer</th>
+            </tr>
+            <tr>
+                <th>Customers</th>
+                <th>Product</th>
+                <th>Sales Volume [t]</th>
+                <th>Sales Price [{{ currency }}/t]</th>
+                <th>Gross Margin [{{ currency }}/t]</th>
+                <th>Gross Margin [{{ currency }}]</th>
+                <th>Total Margin [{{ currency }}/t]</th>
+                <th>Total Margin [{{ currency }}]</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for index, row in Negative_Margin_Table_df.iterrows %}
+            <tr {% if row.GM <= 0 %} style="color: #dc3545;" {% endif %}>
+                <td style="vertical-align: middle;">{{ row.Customers }}</td>
+                <td style="vertical-align: middle;">{{ row.Product }}</td>
+                <td style="vertical-align: middle;">{{ row.Sales_Volume }}</td>
+                <td style="vertical-align: middle;">{{ row.ASP }}</td>
+                <td style="vertical-align: middle;">{{ row.GM_per_t }}</td>
+                <td style="vertical-align: middle;">{{ row.GM }}</td>
+                <td style="vertical-align: middle;">{{ row.TM_per_t }}</td>
+                <td style="vertical-align: middle;">{{ row.TM }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+    <input type="hidden" id="project_id" value="{{ project_id }}">
+    <input type="hidden" id="quarry_id" value="{{ quarry_id }}">
+    <div class="download-data" data-download="{{ Download_df }}"></div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+
+
+<script>
+    document.getElementById('backToPortal').addEventListener('click', function() {
+        // Get the project_id and quarry_id from the hidden inputs
+        var project_id = document.getElementById('project_id').value;
+        var quarry_id = document.getElementById('quarry_id').value;
+
+        // Construct the URL
+        var url = `/Existing_Projects/Data_Portal/P4P_Portal/${project_id}/`;
+
+        // Navigate to the URL
+        window.location.href = url;
+    });
+
+    document.getElementById('downloadData').addEventListener('click', function() {
+        var downloadDataDiv = document.querySelector('.download-data'); // Select by class name
+        var downloadDataJson = downloadDataDiv.dataset.download;
+        var Download_df = JSON.parse(downloadDataJson);
+
+        // Convert JSON to array of objects
+        var data = Download_df.data;
+        var columns = Download_df.columns;
+        var arrayData = [columns].concat(data);
+
+        // Convert array to workbook
+        var wb = XLSX.utils.book_new();
+        var ws = XLSX.utils.aoa_to_sheet(arrayData);
+        XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+
+        // Generate a binary string from the XLSX file
+        var wbout = XLSX.write(wb, { type: 'binary' });
+
+        // Create a blob and download link
+        var blob = new Blob([s2ab(wbout)], { type: 'application/octet-stream' });
+        var url = window.URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        document.body.appendChild(a);
+        a.style = 'display: none';
+        a.href = url;
+        a.download = '{{ quarry_name }}_{{ project_time_period }}_QuarryIQ_P4P.xlsx'; // Set the filename
+        a.click();
+
+        // Clean up
+        window.URL.revokeObjectURL(url);
+    });
+
+    // Function to convert array buffer to binary string
+    function s2ab(s) {
+        var buf = new ArrayBuffer(s.length);
+        var view = new Uint8Array(buf);
+        for (var i = 0; i != s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
+        return buf;
+    }
+
+</script>
+
+{% endblock content %}

@@ -1,0 +1,497 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+
+<title>FarSeer - Meeting Forced Sales</title>
+
+<h2>FarSeer Forecast - Meeting Forced Sales</h2>
+<h4>Project: {{ project_name }} {{ project_time_period }}</h4>
+<h4>Quarry: {{ quarry_name }}</h4>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+<div class="download-data" data-download="{{ Download_df }}"></div>
+
+
+<button class="btn btn-outline-success" style="width: 250px;" id="downloadData">Download Data</button>
+<button class="btn btn-warning" style="width: 250px; margin-left: 20px;" id="backToPortal" onclick="redirectToPortal()">Go Back To FarSeer Results</button>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+    {{ TO_Chart|safe }}
+
+    {{ VC_Chart|safe }}
+
+    {{ GM_Chart|safe }}
+
+    {{ Stock_Value_Chart|safe }}
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+{% for month in unique_months %}
+    <table class="table" id="table-{{ month }}">
+        <thead>
+            <tr>
+                <th style="vertical-align: middle;" class="month-cell">{{ month|upper }}</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;">Production</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;" colspan="3">Forced Sales</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;" colspan="3">Non Essential Sales</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;" colspan="3">Stock Information</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;" colspan="3">Profitability</th>
+            </tr>
+            <tr>
+                <th style="vertical-align: middle;">Product</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;">Volume [t]</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;">Forecast Volume [t]</th>
+                <th style="vertical-align: middle;">Sales Volume [t]</th>
+                <th style="vertical-align: middle;">Av. Sales Price [{{ currency }}/t]</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;">Forecast Volume [t]</th>
+                <th style="vertical-align: middle;">Sales Volume [t]</th>
+                <th style="vertical-align: middle;">Av. Sales Price [{{ currency }}/t]</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;">Opening Stock [t]</th>
+                <th style="vertical-align: middle;">Closing Stock [t]</th>
+                <th style="vertical-align: middle;">Stock Value [{{ currency }}]</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;">Turnover [{{ currency }}]</th>
+                <th style="vertical-align: middle;">Variable Cost [{{ currency }}]</th>
+                <th style="vertical-align: middle;">Gross Margin [{{ currency }}]</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for index, row in FarSeer_results_df.iterrows %}
+                {% if row.Month_Name  == month %}
+                    <tr>
+                        <td style="vertical-align: middle;" class="product-cell">{{ row.Product }}</td>
+                        <td class="space"></td>
+                        <td style="vertical-align: middle;" class="production-cell">{{ row.Product_Production }}</td>
+                        <td class="space"></td>
+                        <td style="vertical-align: middle;" class="Forecast-Forced">{{ row.Forecast_Forced }}</td>
+                        <td style="vertical-align: middle;" class="Sales-Forced">{{ row.Sales_Forced }}</td>
+                        <td style="vertical-align: middle;">{{ row.ASP_Forced }}</td>
+                        <td class="space"></td>
+                        <td style="vertical-align: middle;" class="Forecast-N-Ess">{{ row.Forecast_NonEssential }}</td>
+                        <td style="vertical-align: middle;" class="Sales-N-Ess">{{ row.Sales_Non_Essential }}</td>
+                        <td style="vertical-align: middle;">{{ row.ASP_Non_Essential }}</td>
+                        <td class="space"></td>
+                        <td style="vertical-align: middle;" class="Opening-Stock">{{ row.Opening_Stock }}</td>
+                        <td style="vertical-align: middle;" class="Closing-Stock">{{ row.Closing_Stock }}</td>
+                        <td style="vertical-align: middle;" class="Stock-Value">{{ row.Stock_Value }}</td>
+                        <td class="space"></td>
+                        <td style="vertical-align: middle;" class="Turnover">{{ row.Turnover }}</td>
+                        <td style="vertical-align: middle;" class="Variable-Cost">{{ row.Variable_Cost }}</td>
+                        <td style="vertical-align: middle;" class="GM">{{ row.Gross_Margin }}</td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+            <tr>
+                <th style="vertical-align: middle;">Total</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;" class="total-production-cell"></th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;" class="total-Forecast-Forced"></th>
+                <th style="vertical-align: middle;" class="total-Sales-Forced"></th>
+                <th style="vertical-align: middle;" class="empty"></th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;" class="total-Forecast-N-Ess"></th>
+                <th style="vertical-align: middle;" class="total-Sales-N-Ess"></th>
+                <th style="vertical-align: middle;" class = "empty"></th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;" class="total-Opening-Stock"></th>
+                <th style="vertical-align: middle;" class ="total-Closing-Stock"></th>
+                <th style="vertical-align: middle;" class="total-Stock-Value"></th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;" class="total-Turnover"></th>
+                <th style="vertical-align: middle;" class="total-Variable-Cost"></th>
+                <th style="vertical-align: middle;" class="total-GM"></th>
+            </tr>
+        </tbody>
+    </table>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+<div class="table-container" style="max-width: 1000px;">
+    <table class="table" id="table_Hours-{{ month }}">
+        <thead>
+            <tr>
+                <th style="white-space: normal;">{{ month|upper }}</th>
+                <th style="white-space: normal;">Opening Hours [h]</th>
+                <th style="white-space: normal;">Operating Hours [h]</th>
+                <th style="white-space: normal;">Max Capacity [t/h]</th>
+                <th style="white-space: normal;">Coefficient [-]</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for index, row in FarSeer_hours_df.iterrows %}
+                {% if row.Month_Name  == month %}
+                    <tr>
+                        <td>{{ row.Modes }}</td>
+                        <td class="Opening_Hours">{{ row.Opening_Hours }}</td>
+                        <td class="Operating_Hours">{{ row.Operating_Hours }}</td>
+                        <td>{{ row.Max_capacity }}</td>
+                        <td>{{ row.Coefficient }}</td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+            <tr>
+                <th>Total</th>
+                <th class="Total_Opening_Hours"></th>
+                <th class="Total_Operating_Hours"></th>
+            </tr>
+            {% for index, row in maxOpeningHours_df.iterrows %}
+                {% if row.Month_Name  == month %}
+                    <tr>
+                        <th>Max. Opening Hours [h]</th>
+                        <th>{{ row.Max_Opening_Hours }}</th>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+{% endfor %}
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+    <input type="hidden" id="project_id" value="{{ project_id }}">
+    <input type="hidden" id="quarry_id" value="{{ quarry_id }}">
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Iterate over each table
+    document.querySelectorAll('table').forEach(function(table) {
+        calculateTotalProduction(table);
+        calculateTotalForecastForced(table);
+        calculateTotalSalesForced(table);
+        calculateTotalForecastNEss(table);
+        calculateTotalSalesNEss(table);
+        calculateTotalOpeningStock(table);
+        calculateTotalClosingStock(table);
+        calculateTotalStockValue(table);
+        calculateTotalTurnover(table);
+        calculateTotalVC(table);
+        calculateTotalGM(table);
+        calculateTotalOpeningHours(table);
+        calculateTotalOperatingHours(table);
+    });
+});
+
+function calculateTotalProduction(table) {
+    var productionCells = table.querySelectorAll('.production-cell');
+    var totalProductionCell = table.querySelector('.total-production-cell');
+    var totalProduction = 0;
+
+    // Check if the total forecast forced cell exists
+    if (totalProductionCell) {
+        // Iterate over forecast forced cells in the current table and sum up their values
+        productionCells.forEach(function(cell) {
+            var value = parseFloat(cell.textContent.trim()) || 0; // Parse value or default to 0
+            totalProduction += value;
+        });
+
+        // Update the content of the total forecast forced cell in the current table
+        totalProductionCell.textContent = totalProduction.toLocaleString("en-US");
+    }
+}
+
+function calculateTotalForecastForced(table) {
+    var forecastForcedCells = table.querySelectorAll('.Forecast-Forced');
+    var totalForecastForcedCell = table.querySelector('.total-Forecast-Forced');
+    var totalForecastForced = 0;
+
+    // Check if the total forecast forced cell exists
+    if (totalForecastForcedCell) {
+        // Iterate over forecast forced cells in the current table and sum up their values
+        forecastForcedCells.forEach(function(cell) {
+            var value = parseFloat(cell.textContent.trim()) || 0; // Parse value or default to 0
+            totalForecastForced += value;
+        });
+
+        // Update the content of the total forecast forced cell in the current table
+        totalForecastForcedCell.textContent = totalForecastForced.toLocaleString("en-US");
+    }
+}
+function calculateTotalSalesForced(table) {
+    var salesForcedCells = table.querySelectorAll('.Sales-Forced');
+    var totalSalesForcedCell = table.querySelector('.total-Sales-Forced');
+    var totalSalesForced = 0;
+
+    // Check if the total sales forced cell exists
+    if (totalSalesForcedCell) {
+        // Iterate over sales forced cells in the current table and sum up their values
+        salesForcedCells.forEach(function(cell) {
+            var value = parseFloat(cell.textContent.trim()) || 0; // Parse value or default to 0
+            totalSalesForced += value;
+        });
+
+        // Update the content of the total sales forced cell in the current table
+        totalSalesForcedCell.textContent = totalSalesForced.toLocaleString("en-US");
+    }
+}
+function calculateTotalForecastNEss(table) {
+    var forecastNEssCells = table.querySelectorAll('.Forecast-N-Ess');
+    var totalForecastNEssCell = table.querySelector('.total-Forecast-N-Ess');
+    var totalForecastNEss = 0;
+
+    // Check if the total forecast forced cell exists
+    if (totalForecastNEssCell) {
+        // Iterate over forecast forced cells in the current table and sum up their values
+        forecastNEssCells.forEach(function(cell) {
+            var value = parseFloat(cell.textContent.trim()) || 0; // Parse value or default to 0
+            totalForecastNEss += value;
+        });
+
+        // Update the content of the total forecast forced cell in the current table
+        totalForecastNEssCell.textContent = totalForecastNEss.toLocaleString("en-US");
+    }
+}
+function calculateTotalSalesNEss(table) {
+    var salesNEssCells = table.querySelectorAll('.Sales-N-Ess');
+    var totalSalesNEssCell = table.querySelector('.total-Sales-N-Ess');
+    var totalSalesNEss = 0;
+
+    // Check if the total sales forced cell exists
+    if (totalSalesNEssCell) {
+        // Iterate over sales forced cells in the current table and sum up their values
+        salesNEssCells.forEach(function(cell) {
+            var value = parseFloat(cell.textContent.trim()) || 0; // Parse value or default to 0
+            totalSalesNEss += value;
+        });
+
+        // Update the content of the total sales forced cell in the current table
+        totalSalesNEssCell.textContent = totalSalesNEss.toLocaleString("en-US");
+    }
+}
+function calculateTotalOpeningStock(table) {
+    var openingStockCells = table.querySelectorAll('.Opening-Stock');
+    var totalOpeningStockCell = table.querySelector('.total-Opening-Stock');
+    var totalOpeningStock = 0;
+
+    // Check if the total sales forced cell exists
+    if (totalOpeningStockCell) {
+        // Iterate over sales forced cells in the current table and sum up their values
+        openingStockCells.forEach(function(cell) {
+            var value = parseFloat(cell.textContent.trim()) || 0; // Parse value or default to 0
+            totalOpeningStock += value;
+        });
+
+        // Update the content of the total sales forced cell in the current table
+        totalOpeningStockCell.textContent = totalOpeningStock.toLocaleString("en-US");
+    }
+}
+function calculateTotalClosingStock(table) {
+    var closingStockCells = table.querySelectorAll('.Closing-Stock');
+    var totalClosingStockCell = table.querySelector('.total-Closing-Stock');
+    var totalClosingStock = 0;
+
+    // Check if the total sales forced cell exists
+    if (totalClosingStockCell) {
+        // Iterate over sales forced cells in the current table and sum up their values
+        closingStockCells.forEach(function(cell) {
+            var value = parseFloat(cell.textContent.trim()) || 0; // Parse value or default to 0
+            totalClosingStock += value;
+        });
+
+        // Update the content of the total sales forced cell in the current table
+        totalClosingStockCell.textContent = totalClosingStock.toLocaleString("en-US");
+    }
+}
+function calculateTotalStockValue(table) {
+    var stockValueCells = table.querySelectorAll('.Stock-Value');
+    var totalStockValueCell = table.querySelector('.total-Stock-Value');
+    var totalStockValue = 0;
+
+    // Check if the total sales forced cell exists
+    if (totalStockValueCell) {
+        // Iterate over sales forced cells in the current table and sum up their values
+        stockValueCells.forEach(function(cell) {
+            var value = parseFloat(cell.textContent.trim()) || 0; // Parse value or default to 0
+            totalStockValue += value;
+        });
+
+        // Update the content of the total sales forced cell in the current table
+        totalStockValueCell.textContent = totalStockValue.toLocaleString("en-US");
+    }
+}
+function calculateTotalTurnover(table) {
+    var TurnoverCells = table.querySelectorAll('.Turnover');
+    var totalTurnoverCell = table.querySelector('.total-Turnover');
+    var totalTurnover = 0;
+
+    // Check if the total sales forced cell exists
+    if (totalTurnoverCell) {
+        // Iterate over sales forced cells in the current table and sum up their values
+        TurnoverCells.forEach(function(cell) {
+            var value = parseFloat(cell.textContent.trim()) || 0; // Parse value or default to 0
+            totalTurnover += value;
+        });
+
+        // Update the content of the total sales forced cell in the current table
+        totalTurnoverCell.textContent = totalTurnover.toLocaleString("en-US");
+    }
+}
+function calculateTotalVC(table) {
+    var VCCells = table.querySelectorAll('.Variable-Cost');
+    var totalVCCell = table.querySelector('.total-Variable-Cost');
+    var totalVC = 0;
+
+    // Check if the total sales forced cell exists
+    if (totalVCCell) {
+        // Iterate over sales forced cells in the current table and sum up their values
+        VCCells.forEach(function(cell) {
+            var value = parseFloat(cell.textContent.trim()) || 0; // Parse value or default to 0
+            totalVC += value;
+        });
+
+        // Update the content of the total sales forced cell in the current table
+        totalVCCell.textContent = totalVC.toLocaleString("en-US");
+    }
+}
+function calculateTotalGM(table) {
+    var GMCells = table.querySelectorAll('.GM');
+    var totalGMCell = table.querySelector('.total-GM');
+    var totalGM = 0;
+
+    // Check if the total sales forced cell exists
+    if (totalGMCell) {
+        // Iterate over sales forced cells in the current table and sum up their values
+        GMCells.forEach(function(cell) {
+            var value = parseFloat(cell.textContent.trim()) || 0; // Parse value or default to 0
+            totalGM += value;
+        });
+
+        // Update the content of the total sales forced cell in the current table
+        totalGMCell.textContent = totalGM.toLocaleString("en-US");
+    }
+}
+function calculateTotalOpeningHours(table) {
+    var OpeningHoursCells = table.querySelectorAll('.Opening_Hours');
+    var totalOpeningHoursCell = table.querySelector('.Total_Opening_Hours');
+    var totalOpeningHours = 0;
+
+    // Check if the total sales forced cell exists
+    if (totalOpeningHoursCell) {
+        // Iterate over sales forced cells in the current table and sum up their values
+        OpeningHoursCells.forEach(function(cell) {
+            var value = parseFloat(cell.textContent.trim()) || 0; // Parse value or default to 0
+            totalOpeningHours += value;
+        });
+
+        // Update the content of the total sales forced cell in the current table
+        totalOpeningHoursCell.textContent = totalOpeningHours.toLocaleString("en-US");
+    }
+}
+function calculateTotalOperatingHours(table) {
+    var OperatingHoursCells = table.querySelectorAll('.Operating_Hours');
+    var totalOperatingHoursCell = table.querySelector('.Total_Operating_Hours');
+    var totalOperatingHours = 0;
+
+    // Check if the total sales forced cell exists
+    if (totalOperatingHoursCell) {
+        // Iterate over sales forced cells in the current table and sum up their values
+        OperatingHoursCells.forEach(function(cell) {
+            var value = parseFloat(cell.textContent.trim()) || 0; // Parse value or default to 0
+            totalOperatingHours += value;
+        });
+
+        // Update the content of the total sales forced cell in the current table
+        totalOperatingHoursCell.textContent = totalOperatingHours.toLocaleString("en-US");
+    }
+}
+
+document.getElementById('downloadData').addEventListener('click', function() {
+    var downloadDataDiv = document.querySelector('.download-data'); // Select by class name
+    var downloadDataJson = downloadDataDiv.dataset.download;
+    var Download_df = JSON.parse(downloadDataJson);
+
+    // Convert JSON to array of objects
+    var data = Download_df.data;
+    var columns = Download_df.columns;
+    var arrayData = [columns].concat(data);
+
+    // Convert array to workbook
+    var wb = XLSX.utils.book_new();
+    var ws = XLSX.utils.aoa_to_sheet(arrayData);
+    XLSX.utils.book_append_sheet(wb, ws, 'FarSeer_Meet_Forced_Sales');
+
+    // Generate a binary string from the XLSX file
+    var wbout = XLSX.write(wb, { type: 'binary' });
+
+    // Create a blob and download link
+    var blob = new Blob([s2ab(wbout)], { type: 'application/octet-stream' });
+    var url = window.URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    document.body.appendChild(a);
+    a.style = 'display: none';
+    a.href = url;
+    a.download = '{{ quarry_name }}_{{ project_time_period }}_QuarryIQ_FarSeer_Meet_Forced_Sales.xlsx'; // Set the filename
+    a.click();
+
+    // Clean up
+    window.URL.revokeObjectURL(url);
+});
+
+// Function to convert array buffer to binary string
+function s2ab(s) {
+    var buf = new ArrayBuffer(s.length);
+    var view = new Uint8Array(buf);
+    for (var i = 0; i != s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
+    return buf;
+}
+
+function redirectToPortal() {
+    // Retrieve project_id and quarry_id values
+    var project_id = document.getElementById("project_id").value;
+    var quarry_id = document.getElementById("quarry_id").value;
+
+    // Construct the URL
+    var url = `/Existing_Projects/Data_Portal/FarSeer_Portal/Results_Summary/${project_id}/${quarry_id}/`;
+
+    // Navigate to the URL
+    window.location.href = url;
+}
+</script>
+
+{% endblock content %}

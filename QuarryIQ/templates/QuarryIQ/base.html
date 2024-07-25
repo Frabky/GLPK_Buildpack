@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    {% load static %}
+
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <!-- CSS -->
+    <link rel="stylesheet" type="text/css" href="{% static 'QuarryIQ/base.css' %}">
+
+    <!-- Icons from Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" />
+
+
+    <style>
+        /* Add extra padding to the body to accommodate the fixed navbar */
+        body {
+            padding-top: 80px; /* Adjust this value based on your navbar height */
+        }
+
+        #loading-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999; /* Ensure it's on top of other elements */
+        }
+
+        #loading-container-long-time {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999; /* Ensure it's on top of other elements */
+        }
+
+        /* Spinner border */
+        .spinner-border {
+            display: inline-block;
+            width: 2rem;
+            height: 2rem;
+            vertical-align: text-bottom;
+            border: 0.25em solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spinner-border 0.75s linear infinite;
+        }
+
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+            border-width: 0.2em;
+        }
+
+        /* Spinner grow */
+        .spinner-grow {
+            display: inline-block;
+            width: 2rem;
+            height: 2rem;
+            vertical-align: text-bottom;
+            background-color: currentColor;
+            border-radius: 50%;
+            opacity: 0;
+            animation: spinner-grow 0.75s linear infinite;
+        }
+
+        .spinner-grow-sm {
+            width: 1rem;
+            height: 1rem;
+        }
+
+        @keyframes spinner-border {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes spinner-grow {
+            0% {
+                transform: scale(0);
+            }
+            50% {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .large-spinner {
+        width: 5rem;
+        height: 5rem;
+        border-width: 0.5em;
+        }
+
+        .large-spinner-text {
+        font-size: 2.5rem;
+        margin-left: 50px;
+        }
+
+        .spinner-with-text {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        background-color: #f6f9fc; /* Custom background color */
+        border: 1px solid #f6f9fc; /* Light border */
+        border-radius: 5px; /* Rounded corners */
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <a class="navbar-brand" href="{% url 'Home' %}">
+            <img src="{% static 'QuarryIQ/images/Logo1.png' %}" alt="Icon" style="height: 60px;">
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ml-auto mr-0">
+
+                {% if user.is_superuser %}
+                <li class="nav-item active">
+                    <a class="nav-link" href="{% url 'Admin_Portal' %}">Admin Portal<span class="sr-only">(current)</span></a>
+                </li>
+                {% endif %}
+
+
+                &nbsp;&nbsp;&nbsp;
+
+                {% if user.is_superuser %}
+                <li class="nav-item active">
+                    <a class="nav-link" href="{% url 'Model_Portal' %}">Model Portal<span class="sr-only">(current)</span></a>
+                </li>
+                {% endif %}
+
+
+                &nbsp;&nbsp;&nbsp;
+
+                {% if user.is_authenticated %}
+                <li class="nav-item active">
+                    <a class="nav-link" href="{% url 'Project_List' %}">Project List<span class="sr-only">(current)</span></a>
+                </li>
+
+                &nbsp;&nbsp;&nbsp;
+
+                {% if project_id %}
+                <li class="nav-item active dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Project Features
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        {% if project_id %}
+                            <a class="dropdown-item" href="{% url 'Data_Portal' project_id=project_id %}">Project Portal</a>
+                            <a class="dropdown-item" href="{% url 'Heatmap_Portal' project_id=project_id %}">Heatmap Portal</a>
+                            <a class="dropdown-item" href="{% url 'Streamsmap_Portal' project_id=project_id %}">Streams map Portal</a>
+                            <a class="dropdown-item" href="{% url 'P4P_Portal' project_id=project_id %}">Production for Profit Portal</a>
+                            <a class="dropdown-item" href="{% url 'B4C_Portal' project_id=project_id %}">Balance for Cash Portal</a>
+                            <a class="dropdown-item" href="{% url 'FarSeer_Portal' project_id=project_id %}">FarSeer Forecast Portal</a>
+                            <a class="dropdown-item" href="{% url 'Network_Optimisation_Portal' project_id=project_id %}">Network Optimisation Portal</a>
+                        {% endif %}
+                    </div>
+                </li>
+                {% endif %}
+                {% endif %}
+            </ul>
+
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+
+            <!-- Conditional rendering for login/logout button -->
+            {% if user.is_authenticated %}
+                <form class="form-inline my-2 my-lg-0" action="{% url 'Logout' %}" method="post">
+                    {% csrf_token %}
+                    <a href="{% url 'User_Profile' %}" class="btn btn-outline-light my-2 my-sm-0 ml-2">
+                        <i class="fas fa-user"></i> <!-- Icon from Font Awesome -->
+                    </a>
+                    &nbsp;&nbsp;&nbsp;
+                    <button class="btn btn-outline-light my-2 my-sm-0" type="submit">Logout</button>
+                </form>
+            {% else %}
+                <form class="form-inline my-2 my-lg-0" action="{% url 'Login' %}" method="get">
+                    <button class="btn btn-outline-light my-2 my-sm-0" type="submit">Login</button>
+                </form>
+            {% endif %}
+            <!-- Add additional navbar content, such as login/logout buttons, search form, etc. -->
+        </div>
+    </nav>
+
+
+    <!-- Main content -->
+    <div class="container-fluid">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+
+    <!-- Loading spinner -->
+<div id="loading-container" style="display: none;">
+    <div class="container">
+        <div class="spinner-with-text">
+            <div class="spinner-border text-warning large-spinner" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <span class="large-spinner-text">Calculating, please wait...</span>
+        </div>
+    </div>
+</div>
+
+<div id="loading-container-long-time" style="display: none;">
+    <div class="container">
+        <div class="spinner-with-text">
+            <div class="spinner-border text-warning large-spinner" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <span class="large-spinner-text">Calculating, please wait...<br>This may take up to 20 minutes.</span>
+        </div>
+    </div>
+</div>
+
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+
+    <script>
+        function showLoadingSpinner() {
+            $('#loading-container').show();
+        }
+
+        function showLoadingSpinnerLong() {
+            $('#loading-container-long-time').show();
+        }
+
+        function hideLoadingSpinner() {
+            $('#loading-container').hide();
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+</body>
+</html>

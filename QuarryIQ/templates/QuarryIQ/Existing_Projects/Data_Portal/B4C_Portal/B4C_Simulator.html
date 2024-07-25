@@ -1,0 +1,579 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+
+<title>B4C - Simulator</title>
+
+<h2>Balance for Cash - Simulator</h2>
+<h4>Project: {{ project_name }} {{ project_time_period }}</h4>
+<h4>Quarry: {{ quarry_name }}</h4>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+    <button class="btn btn-outline-success" style="width: 250px;" id="calculate">Run B4C Simulator</button>
+    <button class="btn btn-warning" style="width: 250px; margin-left: 20px;" id="backToPortal" onclick="redirectToPortal()">Go To B4C Portal</button>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th class="empty">
+                <td class="space"></td>
+                <th style="vertical-align: middle;" colspan="2">Sales Profile Reference Based on {{ project_time_period }} Data</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;" colspan="4">Simulation</th>
+            </tr>
+            <tr>
+                <th style="vertical-align: middle;">Product</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;">Sales Volume [t]</th>
+                <th style="vertical-align: middle;">Av. Sales Price [{{ currency }}/t]</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;">Sales Volume [t]</th>
+                <th style="vertical-align: middle;">Av. Sales Price [{{ currency }}/t]</th>
+                <th style="vertical-align: middle;">Current Opening Stock [t]</th>
+                <th style="vertical-align: middle;">Planned Closing Stock [t]</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            {% for index, row in B4CSimulation_df.iterrows %}
+            <tr>
+                <td style="vertical-align: middle;" class="product-cell">{{ row.Product }}</td>
+                <td class="space"></td>
+                <td style="vertical-align: middle;" id="reference-sales">{{ row.Sales_Volume }}</td>
+                <td style="vertical-align: middle;">{{ row.ASP }}</td>
+                <td class="space"></td>
+                <td style="vertical-align: middle;" class="simulation-sales-cell" contenteditable="true" onkeypress="return isNumber(event)">{{ row.Sales_Volume_Sim }}</td>
+                <td style="vertical-align: middle;" class="simulation-ASP-cell" contenteditable="true" onkeypress="return isFloat(event)">{{ row.ASP_Sim }}</td>
+                <td style="vertical-align: middle;" class="simulation-opening-stock-cell" contenteditable="true" onkeypress="return isNumber(event)">{{ row.Opening_Stock_Sim }}</td>
+                <td style="vertical-align: middle;" class="simulation-closing-stock-cell" contenteditable="true" onkeypress="return isNumber(event)">{{ row.Closing_Stock_Sim }}</td>
+            </tr>
+            {% endfor %}
+            <tr>
+                <th style="vertical-align: middle;">Total</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;" id="total-reference-sales"></th>
+                <th class="empty">
+                <td class="space"></td>
+                <th style="vertical-align: middle;" id="total-simulation-sales"></th>
+                <th class="empty">
+                <th style="vertical-align: middle;" id="total-simulation-OpStock"></th>
+                <th style="vertical-align: middle;" id="total-simulation-ClStock"></th>
+            </tr>
+        </tbody>
+    </table>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+{% if minVC_Simulation_Table_df|length > 0 %}
+
+
+<table class="table">
+    <thead>
+        <tr>
+            <th class="empty"></th>
+            <th style="vertical-align: middle;" colspan="7">Balance for Cash - Simulator Summary</th>
+        </tr>
+        <tr>
+            <th class="empty"></th>
+            <th style="vertical-align: middle;">Sales Volume [t]</th>
+            <th style="vertical-align: middle;">Min Stock Volume [t]</th>
+            <th style="vertical-align: middle;">Turnover [{{ currency }}]</th>
+            <th style="vertical-align: middle;">Variable Cost [{{ currency }}]</th>
+            <th style="vertical-align: middle;">Gross Margin [{{ currency }}]</th>
+            <th style="vertical-align: middle;">Opening Hours [h]</th>
+            <th style="vertical-align: middle;">Operating Hours [h]</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <th style="vertical-align: middle;">Meeting Sales Demand</th>
+            <td style="vertical-align: middle;">{{ sum_row_minVC_Simulation_Table.Sales_Volume_Sim }}</td>
+            <td style="vertical-align: middle;">{{ sum_row_minVC_Simulation_Table.Min_Closing_Stock }}</td>
+            <td style="vertical-align: middle;">{{ sum_row_minVC_Simulation_Table.Turnover }}</td>
+            <td style="vertical-align: middle;">{{ sum_row_minVC_Simulation_Table.Variable_Cost }}</td>
+            <td style="vertical-align: middle;">{{ sum_row_minVC_Simulation_Table.Gross_Margin }}</td>
+            <td style="vertical-align: middle;">{{ sum_row_minVC_modes_Hours.Opening_Hours }}</td>
+            <td style="vertical-align: middle;">{{ sum_row_minVC_modes_Hours.Operating_Hours }}</td>
+        </tr>
+        <tr>
+            <th>Maximizing Gross Margin</th>
+            <td style="vertical-align: middle;">{{ sum_row_maxGM_Simulation_Table.Sales_Volume_Sim }}</td>
+            <td style="vertical-align: middle;">{{ sum_row_maxGM_Simulation_Table.Min_Closing_Stock }}</td>
+            <td style="vertical-align: middle;">{{ sum_row_maxGM_Simulation_Table.Turnover }}</td>
+            <td style="vertical-align: middle;">{{ sum_row_maxGM_Simulation_Table.Variable_Cost }}</td>
+            <td style="vertical-align: middle;">{{ sum_row_maxGM_Simulation_Table.Gross_Margin }}</td>
+            <td style="vertical-align: middle;">{{ sum_row_maxGM_modes_Hours.Opening_Hours }}</td>
+            <td style="vertical-align: middle;">{{ sum_row_maxGM_modes_Hours.Operating_Hours }}</td>
+        </tr>
+        <tr>
+            <th style="vertical-align: middle;">Delta</th>
+            <th style="vertical-align: middle;">{{ delta_row_minVC_maxGM.Sales_Volume_Sim }}</th>
+            <th style="vertical-align: middle;">{{ delta_row_minVC_maxGM.Min_Closing_Stock }}</th>
+            <th style="vertical-align: middle;">{{ delta_row_minVC_maxGM.Turnover }}</th>
+            <th style="vertical-align: middle;">{{ delta_row_minVC_maxGM.Variable_Cost }}</th>
+            <th style="vertical-align: middle;">{{ delta_row_minVC_maxGM.Gross_Margin }}</th>
+            <th style="vertical-align: middle;">{{ sum_opening_hours }}</th>
+            <th style="vertical-align: middle;">{{ sum_operating_hours }}</th>
+        </tr>
+    </tbody>
+</table>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th colspan="8">Meeting Sales Demand - Profitability Overview</th>
+            </tr>
+            <tr>
+                <th style="vertical-align: middle;">Product</th>
+                <th style="vertical-align: middle;">Sales Volume [t]</th>
+                <th style="vertical-align: middle;">Min Closing Stock [t]</th>
+                <th style="vertical-align: middle;">Av. Sales Price [{{ currency }}/t]</th>
+                <th style="vertical-align: middle;">Turnover [{{ currency }}]</th>
+                <th style="vertical-align: middle;">Variable Cost [{{ currency }}/t]</th>
+                <th style="vertical-align: middle;">Variable Cost [{{ currency }}]</th>
+                <th style="vertical-align: middle;">Gross Margin [{{ currency }}]</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for index, row in minVC_Simulation_Table_df.iterrows %}
+            <tr>
+                <td style="vertical-align: middle;">{{ row.Product }}</td>
+                <td style="vertical-align: middle;">{{ row.Sales_Volume_Sim }}</td>
+                <td style="vertical-align: middle;">{{ row.Min_Closing_Stock }}</td>
+                <td style="vertical-align: middle;">{{ row.ASP_Sim }}</td>
+                <td style="vertical-align: middle;">{{ row.Turnover }}</td>
+                <td style="vertical-align: middle;">{{ row.Variable_Cost_per_t }}</td>
+                <td style="vertical-align: middle;">{{ row.Variable_Cost }}</td>
+                <td style="vertical-align: middle;">{{ row.Gross_Margin }}</td>
+            </tr>
+            {% endfor %}
+            <tr>
+                <th style="vertical-align: middle;">Total</th>
+                <th style="vertical-align: middle;">{{ sum_row_minVC_Simulation_Table.Sales_Volume_Sim }}</th>
+                <th style="vertical-align: middle;"> {{ sum_row_minVC_Simulation_Table.Min_Closing_Stock }}</th>
+                <th class="empty"></th>
+                <th style="vertical-align: middle;"> {{ sum_row_minVC_Simulation_Table.Turnover }}</th>
+                <th class="empty"></th>
+                <th style="vertical-align: middle;"> {{ sum_row_minVC_Simulation_Table.Variable_Cost }}</th>
+                <th style="vertical-align: middle;"> {{ sum_row_minVC_Simulation_Table.Gross_Margin }}</th>
+            </tr>
+        </tbody>
+    </table>
+
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+
+<div class="table-container" style="max-width: 1000px;">
+    <table class="table">
+        <thead>
+            <tr>
+                <th colspan="5">Meeting Sales Demand - Optimised Production Profile</th>
+            </tr>
+            <tr>
+                <th style="vertical-align: middle;">Mode</th>
+                <th style="vertical-align: middle;">Opening Hours [h]</th>
+                <th style="vertical-align: middle;">Operating Hours [h]</th>
+                <th style="vertical-align: middle;">Max Capacity [t/h]</th>
+                <th style="vertical-align: middle;">Coefficient [-]</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for index, row in modes_Hours_minVC_Simulation_df.iterrows %}
+            <tr>
+                <td style="vertical-align: middle;">{{ row.Modes }}</td>
+                <td style="vertical-align: middle;">{{ row.Opening_Hours }}</td>
+                <td style="vertical-align: middle;">{{ row.Operating_Hours }}</td>
+                <td style="vertical-align: middle;">{{ row.Max_capacity }}</td>
+                <td style="vertical-align: middle;">{{ row.Coefficient }}</td>
+            </tr>
+            {% endfor %}
+            <tr>
+                <th style="vertical-align: middle;">Total</th>
+                <th style="vertical-align: middle;">{{ sum_row_minVC_modes_Hours.Opening_Hours }}</th>
+                <th style="vertical-align: middle;">{{ sum_row_minVC_modes_Hours.Operating_Hours }}</th>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th colspan="8">Maximizing Gross Margin - Profitability Overview</th>
+            </tr>
+            <tr>
+                <th style="vertical-align: middle;">Product</th>
+                <th style="vertical-align: middle;">Sales Volume [t]</th>
+                <th style="vertical-align: middle;">Min Closing Stock [t]</th>
+                <th style="vertical-align: middle;">Av. Sales Price [{{ currency }}/t]</th>
+                <th style="vertical-align: middle;">Turnover [{{ currency }}]</th>
+                <th style="vertical-align: middle;">Variable Cost [{{ currency }}/t]</th>
+                <th style="vertical-align: middle;">Variable Cost [{{ currency }}]</th>
+                <th style="vertical-align: middle;">Gross Margin [{{ currency }}]</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for index, row in maxGM_Simulation_Table_df.iterrows %}
+            <tr>
+                <td style="vertical-align: middle;">{{ row.Product }}</td>
+                <td style="vertical-align: middle;">{{ row.Sales_Volume_Sim }}</td>
+                <td style="vertical-align: middle;">{{ row.Min_Closing_Stock }}</td>
+                <td style="vertical-align: middle;">{{ row.ASP_Sim }}</td>
+                <td style="vertical-align: middle;">{{ row.Turnover }}</td>
+                <td style="vertical-align: middle;">{{ row.Variable_Cost_per_t }}</td>
+                <td style="vertical-align: middle;">{{ row.Variable_Cost }}</td>
+                <td style="vertical-align: middle;">{{ row.Gross_Margin }}</td>
+            </tr>
+            {% endfor %}
+            <tr>
+                <th style="vertical-align: middle;">Total</th>
+                <th style="vertical-align: middle;">{{ sum_row_maxGM_Simulation_Table.Sales_Volume_Sim }}</th>
+                <th style="vertical-align: middle;"> {{ sum_row_maxGM_Simulation_Table.Min_Closing_Stock }}</th>
+                <th class="empty"></th>
+                <th style="vertical-align: middle;"> {{ sum_row_maxGM_Simulation_Table.Turnover }}</th>
+                <th class="empty"></th>
+                <th style="vertical-align: middle;"> {{ sum_row_maxGM_Simulation_Table.Variable_Cost }}</th>
+                <th style="vertical-align: middle;"> {{ sum_row_maxGM_Simulation_Table.Gross_Margin }}</th>
+            </tr>
+        </tbody>
+    </table>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+
+<div class="table-container" style="max-width: 1000px;">
+    <table class="table">
+        <thead>
+            <tr>
+                <th colspan="5">Maximizing Gross Margin - Optimised Production Profile</th>
+            </tr>
+            <tr>
+                <th style="vertical-align: middle;">Mode</th>
+                <th style="vertical-align: middle;">Opening Hours [h]</th>
+                <th style="vertical-align: middle;">Operating Hours [h]</th>
+                <th style="vertical-align: middle;">Max Capacity [t/h]</th>
+                <th style="vertical-align: middle;">Coefficient [-]</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for index, row in modes_Hours_maxGM_Simulation_df.iterrows %}
+            <tr>
+                <td style="vertical-align: middle;">{{ row.Modes }}</td>
+                <td style="vertical-align: middle;">{{ row.Opening_Hours }}</td>
+                <td style="vertical-align: middle;">{{ row.Operating_Hours }}</td>
+                <td style="vertical-align: middle;">{{ row.Max_capacity }}</td>
+                <td style="vertical-align: middle;">{{ row.Coefficient }}</td>
+            </tr>
+            {% endfor %}
+            <tr>
+                <th style="vertical-align: middle;">Total</th>
+                <th style="vertical-align: middle;">{{ sum_row_maxGM_modes_Hours.Opening_Hours }}</th>
+                <th style="vertical-align: middle;">{{ sum_row_maxGM_modes_Hours.Operating_Hours }}</th>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+{% endif %}
+
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+<input type="hidden" id="project_id" value="{{ project_id }}">
+<input type="hidden" id="quarry_id" value="{{ quarry_id }}">
+
+
+
+
+<script>
+
+function redirectToPortal() {
+    // Retrieve project_id and quarry_id values
+    var project_id = document.getElementById("project_id").value;
+    var quarry_id = document.getElementById("quarry_id").value;
+
+    // Construct the URL
+    var url = `/Existing_Projects/Data_Portal/B4C_Portal/${project_id}/`;
+
+    // Navigate to the URL
+    window.location.href = url;
+}
+
+function isNumber(evt) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+
+    if (charCode === 45) { // If the character is "-"
+        return false; // Prevent input of "-"
+    } else if (charCode === 8) { // If the character is backspace
+        return true; // Allow backspace
+    } else if (charCode !== 43 && (charCode < 48 || charCode > 57)) {
+        return false; // Only allow digits and backspace
+    }
+    return true;
+}
+
+
+function isFloat(evt) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+    if (charCode === 46) { // If the character is "."
+        var input = evt.target.textContent;
+        if (input.indexOf('.') !== -1) {
+            return false; // Only allow one decimal point
+        }
+    } else if (charCode !== 8 && (charCode < 48 || charCode > 57)) {
+        return false; // Only allow digits and backspace
+    }
+    return true;
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Get all cells with the id "reference-sales"
+    var salesCells = document.querySelectorAll("#reference-sales");
+
+    // Initialize a variable to hold the total sales
+    var totalSales = 0;
+
+    // Iterate over each sales cell and sum up the values
+    salesCells.forEach(function(cell) {
+        // Remove commas from the text content and parse it as a number, then add it to the total
+        var salesValue = parseFloat(cell.textContent.replace(/,/g, ""));
+        totalSales += salesValue;
+    });
+
+    // Get the cell with the id "total-reference-sales"
+    var totalSalesCell = document.querySelector("#total-reference-sales");
+
+    // Set the text content of the total sales cell to the computed total
+    totalSalesCell.textContent = totalSales.toLocaleString("en-US", {maximumFractionDigits: 0});
+});
+
+
+// Add event listeners to total-simulation-sales elements
+document.querySelectorAll('.simulation-sales-cell').forEach(function(cell) {
+    cell.addEventListener('input', updateTotalSales);
+});
+
+// Add event listeners to total-simulation-OpStock elements
+document.querySelectorAll('.simulation-opening-stock-cell').forEach(function(cell) {
+    cell.addEventListener('input', updateTotalOpStock);
+});
+
+// Add event listeners to total-simulation-ClStock elements
+document.querySelectorAll('.simulation-closing-stock-cell').forEach(function(cell) {
+    cell.addEventListener('input', updateTotalClStock);
+});
+
+// Calculate totals when the page loads
+window.addEventListener('load', function() {
+    updateTotalSales();
+    updateTotalOpStock();
+    updateTotalClStock();
+});
+
+function updateTotalSales() {
+    var totalSum = 0;
+    var simulationSalesCells = document.querySelectorAll('.simulation-sales-cell');
+    simulationSalesCells.forEach(function(cell) {
+        if (!isNaN(parseFloat(cell.textContent))) {
+            totalSum += parseFloat(cell.textContent);
+        }
+    });
+    var formattedTotalSum = totalSum.toLocaleString('en-US', {useGrouping: true});
+    document.getElementById('total-simulation-sales').textContent = formattedTotalSum;
+}
+
+function updateTotalOpStock() {
+    var totalSum = 0;
+    var simulationOpStockCells = document.querySelectorAll('.simulation-opening-stock-cell');
+    simulationOpStockCells.forEach(function(cell) {
+        if (!isNaN(parseFloat(cell.textContent))) {
+            totalSum += parseFloat(cell.textContent);
+        }
+    });
+    var formattedTotalSum = totalSum.toLocaleString('en-US', {useGrouping: true});
+    document.getElementById('total-simulation-OpStock').textContent = formattedTotalSum;
+}
+
+function updateTotalClStock() {
+    var totalSum = 0;
+    var simulationClStockCells = document.querySelectorAll('.simulation-closing-stock-cell');
+    simulationClStockCells.forEach(function(cell) {
+        if (!isNaN(parseFloat(cell.textContent))) {
+            totalSum += parseFloat(cell.textContent);
+        }
+    });
+    var formattedTotalSum = totalSum.toLocaleString('en-US', {useGrouping: true});
+    document.getElementById('total-simulation-ClStock').textContent = formattedTotalSum;
+}
+
+
+
+function extractData() {
+    var productCells = document.querySelectorAll('.product-cell');
+    var salesVolumeCells = document.querySelectorAll('.simulation-sales-cell');
+    var salesPriceCells = document.querySelectorAll('.simulation-ASP-cell');
+    var openingStockCells = document.querySelectorAll('.simulation-opening-stock-cell');
+    var closingStockCells = document.querySelectorAll('.simulation-closing-stock-cell');
+
+    var combinedValues = [];
+
+    // Add the header row
+    combinedValues.push(["Product", "Sales_Volume_Sim", "ASP_Sim", "Opening_Stock_Sim", "Closing_Stock_Sim"]);
+
+    // Iterate over each product cell
+    productCells.forEach(function(productCell, index) {
+        // Get the corresponding cells using the same index
+        var salesVolumeCell = salesVolumeCells[index];
+        var salesPriceCell = salesPriceCells[index];
+        var openingStockCell = openingStockCells[index];
+        var closingStockCell = closingStockCells[index];
+
+        // Extract text content from all cells
+        var productValue = productCell.textContent.trim();
+        var salesVolumeValue = salesVolumeCell.textContent.trim(); // Use textContent to get user input
+        var salesPriceValue = salesPriceCell.textContent.trim(); // Use textContent to get user input
+        var openingStockValue = openingStockCell.textContent.trim(); // Use textContent to get user input
+        var closingStockValue = closingStockCell.textContent.trim(); // Use textContent to get user input
+
+        // Add the product value, delta sales value, and sales price value to the combinedValues array
+        combinedValues.push([productValue, salesVolumeValue, salesPriceValue, openingStockValue, closingStockValue]);
+    });
+    return combinedValues;
+}
+
+document.getElementById('calculate').addEventListener('click', function() {
+    // Call the function to check validation status
+    sendDataToBackend();
+});
+
+
+
+function sendDataToBackend() {
+    // Call functions to get data
+    var extractedData = extractData();
+
+    // Stringify the data
+    var jsonData = JSON.stringify(extractedData);
+
+    // Retrieve project_id and quarry_id
+    const project_id = document.getElementById('project_id').value.trim();
+    const quarry_id = document.getElementById('quarry_id').value.trim();
+
+    // Construct the URL
+    const url = `/Existing_Projects/Data_Portal/B4C_Portal/Simulator_bridge/${project_id}/${quarry_id}/`;
+
+    // Get CSRF token
+    const csrftoken = getCookie('csrftoken');
+
+    // Create a new XMLHttpRequest
+    const xhr = new XMLHttpRequest();
+
+    // Open the request
+    xhr.open('POST', url, true);
+
+    // Set request headers
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('X-CSRFToken', csrftoken);
+
+    // Define the onload function
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            console.log('Data successfully sent to the backend!');
+            // Redirect to Product list page
+            window.location.href = `/Existing_Projects/Data_Portal/B4C_Portal/Simulator/${project_id}/${quarry_id}/`;
+        } else {
+            console.error('Error:', xhr.status);
+        }
+    };
+
+    // Send the JSON data
+    xhr.send(jsonData);
+}
+
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+</script>
+
+{% endblock content %}

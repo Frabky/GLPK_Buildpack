@@ -1,0 +1,69 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+
+<title>Quarry IQ - Project List</title>
+
+<h2>Quarry IQ - Project List</h2>
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th style="vertical-align: middle;">Project</th>
+            <th style="vertical-align: middle;">Company</th>
+            <th style="vertical-align: middle;">Period</th>
+            <th style="vertical-align: middle;">Currency</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for project in user_projects %}
+
+        <tr data-project-id="{{ project.project_id }}">
+            <td style="vertical-align: middle;">
+                <form action="{% url 'Data_Portal' project.project_id %}" method="get">
+                    <button style="width: 250px;" type="submit" class='btn btn-outline-dark'>{{ project.project_name}}</button>
+                </form>
+            </td>
+            <td style="vertical-align: middle;">{{ project.project_company }}</td>
+            <td style="vertical-align: middle;">{{ project.project_time_period }}</td>
+            <td style="vertical-align: middle;">{{ project.currency }}</td>
+
+            {% if is_editor %}
+            <td class="empty" style="vertical-align: middle;">
+                <button style="width: 250px;" class='btn btn-outline-secondary modifyButton'>Modify Information</button>
+            </td>
+            {% endif %}
+
+        {% endfor %}
+    </tbody>
+</table>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+<script>
+
+document.querySelectorAll('.modifyButton').forEach(button => {
+    button.addEventListener('click', function(event) {
+        // Extract the project_id from the button's parent row
+        var projectId = this.closest('tr').dataset.projectId;
+
+        // Construct the URL with the project_id
+        var url = `/Modify_Project_Information/${projectId}/`;
+
+        // Navigate to the URL
+        window.location.href = url;
+    });
+});
+
+
+</script>
+
+{% endblock content %}

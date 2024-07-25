@@ -1,0 +1,346 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+
+<title>B4C - Production Composition</title>
+
+<h2>Balance for Cash - Production Composition</h2>
+<h4>Project: {{ project_name }} {{ project_time_period }}</h4>
+<h4>Quarry: {{ quarry_name }}</h4>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+    <table class="table" id="product-constituent-table">
+        <thead>
+            <tr>
+                <th style="vertical-align: middle;">Product</th>
+                <th style="vertical-align: middle;">Sales Volume [t]</th>
+                <th style="vertical-align: middle;">Production Volume [t]</th>
+
+                {% if not processed_data.0.Constituents.empty %}
+                    {% for constituent in unique_constituents %}
+                        <th style="vertical-align: middle;" contenteditable="true">{{ constituent }}</th>
+                    {% endfor %}
+                {% endif %}
+
+                <td class="space"></td>
+                <th class="validation-header" style="vertical-align: middle;">Validation</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if productComposition_df.empty %}
+                {% for index, row in product_list_df.iterrows %}
+                    <tr>
+                        <td style="vertical-align: middle;">{{ row.Product}}</td>
+                        <td style="vertical-align: middle;">{{ row.Sales_Volume }}</td>
+                        <td style="vertical-align: middle;">{{ row.Production_Volume }}</td>
+                        <td class="space"></td>
+                        <td class="validation" style="vertical-align: middle;"></td>
+                    </tr>
+                {% endfor %}
+
+            {% else %}
+
+                {% for product_data in processed_data %}
+                    <tr>
+                        <td style="vertical-align: middle;">{{ product_data.Product }}</td>
+                        <td style="vertical-align: middle;">{{ product_data.Sales_Volume }}</td>
+                        <td style="vertical-align: middle;">{{ product_data.Production_Volume }}</td>
+
+                        {% if not processed_data.0.Constituents.empty %}
+                            {% for constituent_data in product_data.Constituents %}
+                                <td style="vertical-align: middle;" contenteditable="true" onkeypress="return isNumber(event)" class="constituent">{{ constituent_data }}</td>
+                            {% endfor %}
+                        {% endif %}
+
+                        <td class="space"></td>
+                        <td class="validation" style="vertical-align: middle;"></td>
+                    </tr>
+                {% endfor %}
+
+            {% endif %}
+        </tbody>
+    </table>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+<button class='btn btn-outline-dark' style="width: 250px;" id="addConstituent">Add Constituent</button>
+<button class='btn btn-outline-dark' style="width: 250px; margin-left: 20px;" id="deleteColumn">Delete Constituent</button>
+<button class='btn btn-warning' style="width: 250px; margin-left: 20px;" id="Next">Save</button>
+
+
+<input type="hidden" id="project_id" value="{{ project_id }}">
+<input type="hidden" id="quarry_id" value="{{ quarry_id }}">
+
+
+<script>
+
+
+function isNumber(evt) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+
+    if (charCode === 45) { // If the character is "-"
+        return false; // Prevent input of "-"
+    } else if (charCode === 8) { // If the character is backspace
+        return true; // Allow backspace
+    } else if (charCode !== 43 && (charCode < 48 || charCode > 57)) {
+        return false; // Only allow digits and backspace
+    }
+    return true;
+}
+
+
+
+// Add constituent
+document.getElementById('addConstituent').addEventListener('click', function() {
+    var table = document.getElementById('product-constituent-table');
+    var headerRow = table.querySelector('thead tr');
+    var tbodyRows = table.querySelectorAll('tbody tr');
+
+    // Get the number of existing columns
+    var numColumns = headerRow.children.length;
+
+    // Create new th element for the new column
+    var newTh = document.createElement('th');
+    newTh.textContent = 'Constituent ' + (numColumns - 4); // Include column index
+    newTh.contentEditable = true; // Make header cell editable
+    newTh.style.whiteSpace = 'normal'; // Set text wrapping to normal
+    newTh.style.verticalAlign = 'middle'; // Align text vertically in the middle
+
+    // Insert new th before the empty td.space
+    headerRow.insertBefore(newTh, headerRow.querySelector('td.space'));
+
+    // Append new td cells to each existing row in the tbody
+    tbodyRows.forEach(function(row) {
+        var newTd = document.createElement('td');
+        newTd.contentEditable = true; // Make body cell editable
+        newTd.classList.add('constituent'); // Add the 'constituent' class to the new cell
+
+        newTd.addEventListener('input', function(event) {
+            var input = event.target.textContent.trim(); // Get the input value and remove leading/trailing spaces
+
+            if (!/^\d+$/.test(input)) { // Check if the input is not a positive integer
+                event.target.textContent = ''; // Clear the cell if input is invalid
+            } else if (parseInt(input) > 100) { // Check if the input exceeds 100
+                event.target.textContent = '100'; // Set the cell value to 100 if input exceeds 100
+            }
+            calculateRowSums(); // Recalculate row sums when cell content changes
+        });
+
+        // Insert new td before the empty td.space
+        row.insertBefore(newTd, row.querySelector('td.space'));
+    });
+
+    // After appending new cells, reassign event listeners for .constituent cells
+    var constituentCells = document.querySelectorAll('.constituent');
+    constituentCells.forEach(function(cell) {
+        cell.addEventListener('input', function() {
+            calculateRowSums(); // Recalculate row sums when constituent cell content changes
+        });
+    });
+});
+
+
+
+// Delete constituent
+document.getElementById('deleteColumn').addEventListener('click', function() {
+    var table = document.getElementById('product-constituent-table');
+    var headerRow = table.querySelector('thead tr');
+
+    // Get the index of the last column before the space column
+    var spaceColumnIndex = -1;
+    for (var i = 0; i < headerRow.children.length; i++) {
+        if (headerRow.children[i].classList.contains('space')) {
+            spaceColumnIndex = i;
+            break;
+        }
+    }
+
+    // Check if there are more than three columns and if there's a space column
+    if (headerRow.children.length > 3 && spaceColumnIndex > 0) {
+        var lastColumnIndex = spaceColumnIndex - 1;
+
+        // Ensure that at least three columns remain
+        if (headerRow.children.length - 1 > 4) {
+            // Remove the last th element from the header row
+            headerRow.children[lastColumnIndex].remove();
+
+            // Remove the corresponding td element from each row in the tbody
+            var tbodyRows = table.querySelectorAll('tbody tr');
+            tbodyRows.forEach(function(row) {
+                row.children[lastColumnIndex].remove();
+            });
+        }
+    }
+    calculateRowSums();
+});
+
+
+
+// Calculate Validation Cells
+function calculateRowSums() {
+    var table = document.getElementById('product-constituent-table');
+    var tbodyRows = table.querySelectorAll('tbody tr');
+
+    tbodyRows.forEach(function(row) {
+        var constituentCells = row.querySelectorAll('.constituent');
+        var rowSum = 0;
+
+        constituentCells.forEach(function(cell) {
+            // Get the cell value and convert it to a number
+            var cellValue = parseFloat(cell.textContent.trim()) || 0;
+            // Add the cell value to the row sum
+            rowSum += cellValue;
+        });
+
+        // Find the corresponding validation cell and update its content with the row sum
+        var validationCell = row.querySelector('.validation');
+        validationCell.textContent = rowSum.toFixed(0); // Adjust precision as needed
+
+        // Check if the row sum is equal to 100
+        if (rowSum === 100) {
+            validationCell.textContent = 'Ok';
+        } else {
+            validationCell.textContent = rowSum;
+        }
+    });
+}
+
+
+
+// Event listener for changes in constituent cells
+var constituentCells = document.querySelectorAll('.constituent');
+constituentCells.forEach(function(cell) {
+    cell.addEventListener('input', function() {
+        calculateRowSums(); // Recalculate row sums when constituent cell content changes
+    });
+});
+
+// Call the function when needed
+calculateRowSums();
+
+
+
+
+function areAllCellsOk() {
+    const validationCells = document.querySelectorAll('.validation');
+
+    if (validationCells.length === 0) {
+        return false;
+    }
+    for (let i = 0; i < validationCells.length; i++) {
+        if (validationCells[i].textContent.trim() !== 'Ok') {
+            return false; // If any cell does not have content "Ok", return false
+        }
+    }
+    return true;
+}
+
+
+
+function extractData() {
+    const dataTable = document.getElementById('product-constituent-table');
+    const headerRow = dataTable.querySelector('thead tr');
+    const dataRows = dataTable.querySelectorAll('tbody tr');
+
+    const header = Array.from(headerRow.children)
+        .filter(cell => !cell.classList.contains('validation') && !cell.classList.contains('space') && !cell.classList.contains('validation-header'))
+        .map(cell => cell.textContent.trim());
+
+    const data = Array.from(dataRows).map(row => {
+        return Array.from(row.children)
+            .filter(cell => !cell.classList.contains('validation') && !cell.classList.contains('space'))
+            .map(cell => cell.textContent.trim());
+    });
+
+    const extractedData = { header, data };
+
+    return extractedData;
+}
+
+
+
+document.getElementById('Next').addEventListener('click', validateAndSendData);
+
+
+function validateAndSendData() {
+    if (areAllCellsOk()) {
+        sendDataToBackend();
+    } else {
+        alert('Please Proceed to Product Composition.'); // Prompt the user to fill the data correctly
+    }
+}
+
+
+function sendDataToBackend() {
+    // Call functions to get data
+    var extractedData = extractData();
+
+    // Create an object with the key 'extractedData' and assign the extracted data to it
+    var jsonData = { 'extractedData': extractedData };
+
+    // Stringify the data
+    var jsonString = JSON.stringify(jsonData);
+
+    // Retrieve project_id and quarry_id
+    const project_id = document.getElementById('project_id').value.trim();
+    const quarry_id = document.getElementById('quarry_id').value.trim();
+
+    // Construct the URL
+    const url = `/Existing_Projects/Data_Portal/B4C_Portal/Product_Composition_bridge/${project_id}/${quarry_id}/`;
+
+    // Get CSRF token
+    const csrftoken = getCookie('csrftoken');
+
+    // Create a new XMLHttpRequest
+    const xhr = new XMLHttpRequest();
+
+    // Open the request
+    xhr.open('POST', url, true);
+
+    // Set request headers
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('X-CSRFToken', csrftoken);
+
+    // Define the onload function
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            console.log('Data successfully sent to the backend!');
+            // Redirect to Product list page
+            window.location.href = `/Existing_Projects/Data_Portal/B4C_Portal/Production_Balance/${project_id}/${quarry_id}/`;
+        } else {
+            console.error('Error:', xhr.status);
+        }
+    };
+
+    // Send the JSON data
+    xhr.send(jsonString);
+}
+
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+
+
+{% endblock content %}

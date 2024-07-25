@@ -1,0 +1,457 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+<title>NO - Baseline Information</title>
+
+<h2>Network Optimisation - Baseline Information</h2>
+<h4>Project: {{ project_name }} {{ project_time_period }}</h4>
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+<table id="infoTable" class="table">
+    <thead>
+        <tr>
+            <th colspan="5">Scenario - Baseline</th>
+        </tr>
+        <tr>
+            <th style="vertical-align: middle;">Quarry</th>
+            <th style="vertical-align: middle;">Max. Opening Hours [h]</th>
+            <th style="vertical-align: middle;">Max. Sales Volume [t]</th>
+            <th style="vertical-align: middle;">Fixed Cost [k{{ currency }}]</th>
+            <th style="vertical-align: middle;">Data Completion Status</th>
+        </tr>
+    </thead>
+    {% if baseline_infoTable_df.empty %}
+    <tbody>
+        {% for index, row in NO_Completion_df.iterrows %}
+        <tr>
+            <td style="vertical-align: middle;" class="quarries">{{ row.Quarry }}</td>
+            <td style="vertical-align: middle;" class="maxOpeningHours" contenteditable="true" onkeypress="return isNumber(event)"></td>
+            <td style="vertical-align: middle;" class="maxSalesVolume" contenteditable="true" onkeypress="return isNumber(event)"></td>
+            <td style="vertical-align: middle;" class="fixedCost" contenteditable="true" onkeypress="return isNumber(event)"></td>
+            <td style="vertical-align: middle;">
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped bg-warning" role="progressbar" style="width: {{ row.NO_Completion }}%" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    {% else %}
+    <tbody>
+        {% for index, row in baseline_infoTable_merged_with_NO_Completion_df.iterrows %}
+        <tr>
+            <td style="vertical-align: middle;" class="quarries">{{ row.Quarry }}</td>
+            <td style="vertical-align: middle;" class="maxOpeningHours" contenteditable="true" onkeypress="return isNumber(event)">{{ row.Max_Opening_Hours }}</td>
+            <td style="vertical-align: middle;" class="maxSalesVolume" contenteditable="true" onkeypress="return isNumber(event)">{{ row.Max_Sales_Volume }}</td>
+            <td style="vertical-align: middle;" class="fixedCost" contenteditable="true" onkeypress="return isNumber(event)">{{ row.Fixed_Cost }}</td>
+            <td style="vertical-align: middle;">
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped bg-warning no-completion" role="progressbar" style="width: {{ row.NO_Completion }}%" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    {% endif %}
+</table>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+
+<table id="radiusTable" class="table">
+    <thead>
+        <tr>
+            <th colspan="4" style="vertical-align: middle;">Transport Cost Definition</th>
+        </tr>
+        <tr>
+            <th style="vertical-align: middle;">Radius</th>
+            <th style="vertical-align: middle;" class="From">From [km]</th>
+            <th style="vertical-align: middle;" class="To">To [km]</th>
+            <th style="vertical-align: middle;">Transport Cost [{{ currency }}/km] per ton</th>
+        </tr>
+    </thead>
+    {% if radiusTable_df.empty %}
+    <tbody>
+        <tr>
+            <td style="vertical-align: middle;">Radius 1</td>
+            <td style="vertical-align: middle;">0</td>
+            <td style="vertical-align: middle;" contenteditable="true" onkeypress="return isNumber(event)"></td>
+            <td style="vertical-align: middle;" contenteditable="true" onkeypress="return isFloat(event)"></td>
+        </tr>
+    </tbody>
+    {% else %}
+    <tbody>
+        {% for index, row in radiusTable_df.iterrows %}
+        <tr>
+            <td style="vertical-align: middle;">{{ row.Radius }}</td>
+            <td style="vertical-align: middle;">{{ row.From }}</td>
+            <td style="vertical-align: middle;" contenteditable="true" onkeypress="return isNumber(event)">{{ row.To }}</td>
+            <td style="vertical-align: middle;" contenteditable="true" onkeypress="return isFloat(event)">{{ row.Transport_Cost }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    {% endif %}
+</table>
+
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+<button class='btn btn-outline-dark' style="width: 250px;" id="addRadius">Add Radius</button>
+<button class='btn btn-outline-dark' style="width: 250px; margin-left: 20px;" id="deleteRadius">Delete Radius</button>
+<button class='btn btn-outline-success' style="width: 250px; margin-left: 20px;" id="save">Calculate Baseline</button>
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+<button class="btn btn-warning" style="width: 250px;" id="backToPortal" onclick="redirectToPortal()">Go Back To Net Opt Portal</button>
+
+
+
+<input type="hidden" id="maxDistance" value="{{ max_distance }}">
+<input type="hidden" id="project_id" value="{{ project_id }}">
+<input type="hidden" id="scenarios_exist" value="{{ scenarios_exist }}">
+<input type="hidden" id="data_completion" value="{{ data_completion }}">
+
+
+<script>
+
+// Making sure only number can be typed
+function isNumber(evt) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+
+    if (charCode === 45) { // If the character is "-"
+        return false; // Prevent input of "-"
+    } else if (charCode === 8) { // If the character is backspace
+        return true; // Allow backspace
+    } else if (charCode !== 43 && (charCode < 48 || charCode > 57)) {
+        return false; // Only allow digits and backspace
+    }
+    return true;
+}
+
+function isFloat(evt) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+    var input = evt.target.textContent;
+
+    if (charCode === 46) { // If the character is "."
+        if (input.indexOf('.') !== -1) {
+            return false; // Only allow one decimal point
+        }
+    } else if (charCode !== 8 && (charCode < 48 || charCode > 57)) {
+        return false; // Only allow digits and backspace
+    }
+    return true;
+}
+
+function addRadiusRow() {
+    var table = document.getElementById('radiusTable').getElementsByTagName('tbody')[0];
+    var rowCount = table.rows.length;
+
+    if (rowCount > 0) {
+        var lastRow = table.rows[rowCount - 1];
+        var lastCell2 = lastRow.cells[1].textContent.trim();
+        var lastCell3 = lastRow.cells[2].textContent.trim();
+        if (lastCell2 === '' || lastCell3 === '') {
+            alert('Please fill in the From and To fields before adding a new radius.');
+            return;
+        }
+
+        var fromValue = parseFloat(lastCell2);
+        var toValue = parseFloat(lastCell3);
+
+        if (isNaN(fromValue) || isNaN(toValue) || toValue <= fromValue) {
+            alert('The "To" value must be greater than the "From" value.');
+            return;
+        }
+    }
+
+    var row = table.insertRow(rowCount);
+
+    var cell1 = row.insertCell(0);
+    var cell2 = row.insertCell(1);
+    var cell3 = row.insertCell(2);
+    var cell4 = row.insertCell(3);
+
+    cell1.innerHTML = 'Radius ' + (rowCount + 1);
+    if (rowCount > 0) {
+        var previousRow = table.rows[rowCount - 1];
+        var previousCell3 = previousRow.cells[2].textContent;
+        cell2.innerHTML = previousCell3;
+    } else {
+        cell2.innerHTML = '0';
+    }
+    cell3.contentEditable = 'true';
+    cell3.setAttribute('onkeypress', 'return isNumber(event)');
+    cell3.addEventListener('input', updateNextFrom); // Add event listener to "To" cell
+    cell4.contentEditable = 'true';
+    cell4.setAttribute('onkeypress', 'return isFloat(event)');
+}
+
+function updateNextFrom(event) {
+    var currentToCell = event.target;
+    var currentRow = currentToCell.parentElement;
+    var currentRowIndex = Array.prototype.indexOf.call(currentRow.parentElement.children, currentRow); // Get index within tbody
+
+    var table = document.getElementById('radiusTable').getElementsByTagName('tbody')[0];
+    var nextRow = table.rows[currentRowIndex + 1]; // Get next row
+
+    if (nextRow) {
+        var nextFromCell = nextRow.cells[1];
+        nextFromCell.textContent = currentToCell.textContent.trim();
+    }
+}
+
+
+
+function deleteLastRadiusRow() {
+    var table = document.getElementById('radiusTable').getElementsByTagName('tbody')[0];
+    var rowCount = table.rows.length;
+    if (rowCount > 1) { // Ensure there's at least one row remaining
+        table.deleteRow(rowCount - 1);
+    } else {
+        alert('At least one radius must be kept.');
+    }
+}
+
+
+function validateAndSave(max_distance) {
+    // Retrieve scenarios_exist
+    const scenarios_exist = document.getElementById('scenarios_exist').value.trim();
+
+    // Convert scenarios_exist to a boolean
+    const scenariosExistBool = (scenarios_exist.toLowerCase() === 'true');
+
+    var table = document.getElementById('radiusTable').getElementsByTagName('tbody')[0];
+    var rowCount = table.rows.length;
+
+    // Check if all specified cells in the infoTable are filled
+    function checkAllCellsFilled() {
+        let maxOpeningHoursCells = document.querySelectorAll('.maxOpeningHours');
+        let maxSalesVolumeCells = document.querySelectorAll('.maxSalesVolume');
+        let fixedCostCells = document.querySelectorAll('.fixedCost');
+
+        // Function to check if any cell in a NodeList is empty
+        function anyCellEmpty(cells) {
+            return Array.from(cells).some(cell => cell.textContent.trim() === '');
+        }
+
+        // Check if any cells in the table are empty
+        if (anyCellEmpty(maxOpeningHoursCells) || anyCellEmpty(maxSalesVolumeCells) || anyCellEmpty(fixedCostCells)) {
+            alert('All cells must be filled in before proceeding to calculation.');
+            return false;
+        }
+        return true;
+    }
+
+    if (!checkAllCellsFilled()) {
+        return;
+    }
+
+    for (var i = 0; i < rowCount; i++) {
+        var row = table.rows[i];
+        var fromValue = row.cells[1].textContent.trim();
+        var toValue = row.cells[2].textContent.trim();
+        var costValue = row.cells[3].textContent.trim();
+
+        if (fromValue === '' || toValue === '' || costValue === '') {
+            alert('All fields must be filled before calculation.');
+            return;
+        }
+
+        fromValue = parseFloat(fromValue);
+        toValue = parseFloat(toValue);
+
+        if (toValue <= fromValue) {
+            alert('The "To" value must be greater than the "From" value in all rows.');
+            return;
+        }
+
+        // Check if the last row's 'To' value is larger or equal to max_distance
+        if (i === rowCount - 1 && toValue < max_distance) {
+            alert('The "To" value in the last radius must be larger or equal to ' + max_distance + ' km.');
+            return;
+        }
+    }
+
+    if (scenariosExistBool) {
+        if (!confirm('Recalculating the baseline will delete all existing scenarios. Do you want to proceed?')) {
+            return;
+        }
+    }
+
+    sendDataToBackend();
+}
+
+function extractData() {
+    // Extract data from the first table
+    var radiusTable = document.getElementById("radiusTable");
+    var radiusHeaderRow = ["Radius", "From", "To", "Transport_Cost"];
+    var radiusTableData = [radiusHeaderRow];
+
+    var radiusRows = radiusTable.rows;
+    for (var i = 2; i < radiusRows.length; i++) {
+        var row = radiusRows[i];
+        var cells = row.cells;
+        var rowData = [];
+
+        for (var j = 0; j < cells.length; j++) {
+            var cell = cells[j];
+            rowData.push(cell.textContent.trim());
+        }
+
+        radiusTableData.push(rowData);
+    }
+
+    // Extract data from the additional table
+    var additionalTable = document.getElementById("infoTable");
+    var infoTableHeaderRow = ["Quarry", "Max_Opening_Hours", "Max_Sales_Volume", "Fixed_Cost"];
+    var infoTableData = [infoTableHeaderRow];
+
+    var infoRows = infoTable.rows;
+    for (var k = 2; k < infoRows.length; k++) { // Skip the 2 header rows
+        var row = infoRows[k];
+        var cells = row.cells;
+        var rowData = [];
+
+        for (var l = 0; l < cells.length - 1; l++) { // Skip the last column
+            var cell = cells[l];
+            rowData.push(cell.textContent.trim());
+        }
+
+        infoTableData.push(rowData);
+    }
+
+    // Combine both tables' data into one object
+    var extractedData = {
+        radiusTable: radiusTableData,
+        infoTable: infoTableData
+    };
+
+    return extractedData;
+}
+
+
+function sendDataToBackend() {
+    // Show the loading spinner before sending data to the backend
+    showLoadingSpinnerLong();
+
+    // Call functions to get data
+    var data = extractData();
+
+    // Stringify the data
+    var jsonData = JSON.stringify(data);
+
+    // Retrieve project_id and quarry_id
+    const project_id = document.getElementById('project_id').value.trim();
+
+    // Construct the URL
+    const url = `/Existing_Projects/Data_Portal/Network_Optimisation_Baseline_Information_bridge/${project_id}/`;
+
+    // Get CSRF token
+    const csrftoken = getCookie('csrftoken');
+
+    // Create a new XMLHttpRequest
+    const xhr = new XMLHttpRequest();
+
+    // Open the request
+    xhr.open('POST', url, true);
+
+    // Set request headers
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('X-CSRFToken', csrftoken);
+
+    // Define the onload function
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            console.log('Data successfully sent to the backend!');
+            // Redirect to Product list page
+            window.location.href = `/Existing_Projects/Data_Portal/Network_Optimisation_Baseline_Results/${project_id}/`;
+        } else {
+            console.error('Error:', xhr.status);
+        }
+
+    };
+
+    // Send the JSON data
+    xhr.send(jsonData);
+}
+
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('addRadius').addEventListener('click', addRadiusRow);
+    document.getElementById('deleteRadius').addEventListener('click', deleteLastRadiusRow);
+
+    // Retrieve max_distance from the hidden input element
+    var max_distance = document.getElementById('maxDistance').value;
+
+    // Calculate baseline with conditions
+    document.getElementById('save').addEventListener('click', function() {
+        // Retrieve max_distance from the hidden input element
+        var data_completion = parseFloat(document.getElementById('data_completion').value);
+
+        if (data_completion === 100) {
+            validateAndSave(parseFloat(max_distance));
+        } else {
+            alert("Please complete P4P and B4C for all quarries before calculating the baseline.");
+        }
+
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    var table = document.getElementById('radiusTable').getElementsByTagName('tbody')[0];
+    var rows = table.rows;
+    for (var i = 0; i < rows.length; i++) {
+        var toCell = rows[i].cells[2];
+        toCell.addEventListener('input', updateNextFrom);
+    }
+});
+
+function redirectToPortal() {
+    // Retrieve project_id and quarry_id values
+    var project_id = document.getElementById("project_id").value;
+
+    // Construct the URL
+    var url = `/Existing_Projects/Data_Portal/Network_Optimisation_Portal/${project_id}/`;
+
+    // Navigate to the URL
+    window.location.href = url;
+}
+
+</script>
+
+{% endblock content %}

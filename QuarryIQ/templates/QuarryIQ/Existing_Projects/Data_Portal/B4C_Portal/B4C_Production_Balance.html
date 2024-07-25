@@ -1,0 +1,519 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+
+<title>B4C - Production Balance</title>
+
+<h2>Balance for Cash - Production Balance</h2>
+<h4>Project: {{ project_name }} {{ project_time_period }}</h4>
+<h4>Quarry: {{ quarry_name }}</h4>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+    <table class="table" id="constituent-table">
+            <thead>
+                <tr>
+                    <th style="vertical-align: middle;">Constituent</th>
+                    <th style="vertical-align: middle;">Production Volume [t]</th>
+                    {% if not processed_data.0.Modes.empty %}
+                        {% for mode in unique_modes %}
+                            <th style="vertical-align: middle;" contenteditable="true">{{ mode }}</th>
+                        {% endfor %}
+                    {% endif %}
+                </tr>
+            </thead>
+
+            <tbody>
+                {% if constituentModesBalance_df.empty %}
+                    {% for index, row in constituentProduction_df.iterrows %}
+                        <tr>
+                            <td style="vertical-align: middle;">{{ row.Constituent}}</td>
+                            <td style="vertical-align: middle;">{{ row.Constituent_Volume }}</td>
+                        </tr>
+                    {% endfor %}
+
+                {% else %}
+                    {% for product_data in processed_data %}
+                        <tr>
+                            <td style="vertical-align: middle;">{{ product_data.Constituent }}</td>
+                            <td style="vertical-align: middle;">{{ product_data.Constituent_Volume }}</td>
+                            {% if not processed_data.0.Modes.empty %}
+                                {% for mode_data in product_data.Modes %}
+                                    <td style="vertical-align: middle;" contenteditable="true" onkeypress="return isNumber(event)">{{ mode_data }}</td>
+                                {% endfor %}
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+
+                {% endif %}
+
+                <tr class="max-capacity-cell">
+                    <td colspan="2" style="vertical-align: middle; font-weight: bold;">Max Capacity [t/h]</td>
+                    {% if capacityModes_df.empty %}
+
+                    {% else %}
+
+                        {% for index, row in capacityModes_df.iterrows %}
+                            <td style="vertical-align: middle;" contenteditable="true" onkeypress="return isNumber(event)">{{ row.Max_capacity }}</td>
+                        {% endfor %}
+
+                    {% endif %}
+                </tr>
+
+                <tr class="coefficient-cell">
+                    <td style="vertical-align: middle; font-weight: bold;" colspan="2">Coefficient [%]</td>
+                    {% if capacityModes_df.empty %}
+
+                    {% else %}
+
+                        {% for index, row in capacityModes_df.iterrows %}
+                            <td style="vertical-align: middle;" contenteditable="true" onkeypress="return isNumber(event)">{{ row.Coefficient }}</td>
+                        {% endfor %}
+
+                    {% endif %}
+                </tr>
+
+                <tr class="validation-cell">
+                    <td style="vertical-align: middle; font-weight: bold;" class="validation-header" colspan="2">Validation</td>
+                    {% if capacityModes_df.empty %}
+
+                    {% else %}
+
+                        {% for index, row in capacityModes_df.iterrows %}
+                            <td style="vertical-align: middle;"></td>
+                        {% endfor %}
+
+                    {% endif %}
+                </tr>
+            </tbody>
+    </table>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+<button class='btn btn-outline-dark' style="width: 250px;" id="addMode">Add Production Mode</button>
+<button class='btn btn-outline-dark' style="width: 250px; margin-left: 20px;" id="deleteMode">Delete Production Mode</button>
+<button class='btn btn-warning' style="width: 250px; margin-left: 20px;" id="Save">Save</button>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+
+<div class="table-container" style="width: 800px;">
+    <table class="table" id="reference-table">
+            <thead>
+                <tr>
+                    <th colspan="3">Production Balance Reference Based on {{ project_time_period }} Data</th>
+                </tr>
+                <tr>
+                    <th>Constituent</th>
+                    <th>Select</th>
+                    <th>Production Balance [%]</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for index, row in referenceBalance_df.iterrows %}
+                <tr>
+                    <td>{{ row.Constituent }}</td>
+                    <td><input type="checkbox" checked></td>
+                    <td id="balance-cell"></td>
+                    <td class="constituent-volume-cell" style="display: none;">{{ row.Constituent_Volume }}</td>
+                </tr>
+                {% endfor %}
+                <tr>
+                    <td style="font-weight: bold;" colspan="2">Considered Volume [t]</td>
+                    <td id="total-cell"></td>
+                </tr>
+            </tbody>
+    </table>
+</div>
+
+
+
+<input type="hidden" id="project_id" value="{{ project_id }}">
+<input type="hidden" id="quarry_id" value="{{ quarry_id }}">
+
+
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get all non-empty cells in the table body excluding cells in the 'max-capacity-cell', 'validation-cell', and 'coefficient-cell' rows
+    var cellsToValidate = document.querySelectorAll('tbody tr:not(.max-capacity-cell):not(.validation-cell):not(.coefficient-cell) td:not(.empty):not(.constituent-volume-cell):not(.coefficient-cell)');
+
+    // Iterate over all non-empty cells
+    cellsToValidate.forEach(function(cell) {
+        // Calculate the index of the column
+        var columnIndex = Array.from(cell.parentNode.children).indexOf(cell);
+
+        // Run validation for columns starting from the third column onwards
+        if (columnIndex >= 2) {
+            // Call the updateValidation function for the current column index
+            updateValidation(null, columnIndex);
+        }
+    });
+});
+
+
+
+function isNumber(evt) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+
+    if (charCode === 45) { // If the character is "-"
+        return false; // Prevent input of "-"
+    } else if (charCode === 8) { // If the character is backspace
+        return true; // Allow backspace
+    } else if (charCode !== 43 && (charCode < 48 || charCode > 57)) {
+        return false; // Only allow digits and backspace
+    }
+    return true;
+}
+
+// Function to add modes
+document.getElementById('addMode').addEventListener('click', function() {
+    var table = document.getElementById('constituent-table');
+    var headerRow = table.querySelector('thead tr');
+    var tbodyRows = table.querySelectorAll('tbody tr:not(.empty-row)'); // Exclude empty rows
+
+    // Get the number of existing columns
+    var numColumns = headerRow.children.length;
+
+    // Create new th element for the new column
+    var newTh = document.createElement('th');
+    newTh.textContent = 'Mode ' + (numColumns - 1); // Include column index
+    newTh.style.verticalAlign = 'middle'; // Align text vertically in the middle
+    newTh.contentEditable = true; // Make header cell editable
+    newTh.style.whiteSpace = 'normal'; // Set text wrapping to normal
+
+    // Append new th to the header row
+    headerRow.appendChild(newTh);
+
+    // Append new td cells to each existing row in the tbody
+    tbodyRows.forEach(function(row) {
+        var newTd = document.createElement('td');
+        newTd.style.verticalAlign = 'middle'; // Align text vertically in the middle
+        var firstCellText = row.querySelector('td').textContent.trim();
+        if (firstCellText === 'Max Capacity [t/h]') {
+            newTd.textContent = '';
+        } else if (firstCellText !== 'Validation') {
+            newTd.textContent = '';
+        }
+
+        // Make body cell editable except for the "Validation" row
+        newTd.contentEditable = firstCellText !== 'Validation';
+
+        newTd.addEventListener('input', function(event) {
+            var input = event.target.textContent.trim(); // Get the input value and remove leading/trailing spaces
+
+            if (!/^\d+$/.test(input)) { // Check if the input is not a positive integer
+                event.target.textContent = ''; // Clear the cell if input is invalid
+            } else if (parseInt(input) > 100 && firstCellText !== 'Max Capacity [t/h]') { // Check if the input exceeds 100, except for "Max Capacity [t/h]" row
+                event.target.textContent = '100'; // Set the cell value to 100 if input exceeds 100
+            }
+        });
+        row.appendChild(newTd);
+    });
+});
+
+// Function to remove modes
+document.getElementById('deleteMode').addEventListener('click', function() {
+    var table = document.getElementById('constituent-table');
+    var headerRow = table.querySelector('thead tr');
+
+    // Check if there are more than three columns
+    if (headerRow.children.length > 2) {
+        var tbodyRows = table.querySelectorAll('tbody tr:not(.empty-row)'); // Exclude empty rows
+        // Remove the last th element from the header row
+        var lastTh = headerRow.lastElementChild;
+        lastTh.remove();
+
+        // Remove the last td element from each row in the tbody
+        tbodyRows.forEach(function(row) {
+            var lastTd = row.lastElementChild;
+            lastTd.remove();
+        });
+    }
+});
+
+
+// Function to update the Validation row
+function updateValidation(event, columnIndex) {
+    var validationRow = document.querySelector('tbody tr.validation-cell'); // Get the Validation row
+
+    // Get all non-empty cells in the same column excluding cells in the Validation row, cells with the class 'constituent-volume-cell', 'coefficient-cell', and cells in rows with class 'max-capacity-cell' or 'validation-cell'
+    var cellsInColumn = document.querySelectorAll('#constituent-table tbody tr:not(.max-capacity-cell):not(.validation-cell):not(.coefficient-cell) td:nth-child(' + (columnIndex + 1) + '):not(.empty):not(.constituent-volume-cell):not(.coefficient-cell)');
+
+    // Calculate the sum of the values in the column
+    var sum = 0;
+    cellsInColumn.forEach(function(cell) {
+        var cellValue = parseInt(cell.textContent.trim()) || 0; // Parse the cell content as integer, default to 0 if not a valid number
+        sum += cellValue;
+    });
+
+    // Update the content of the corresponding cell in the Validation row based on the sum
+    var validationCell = validationRow.querySelector('td:nth-child(' + (columnIndex) + ')');
+    if (validationCell) {
+        if (sum === 100) {
+            validationCell.textContent = 'Ok';
+        } else {
+            validationCell.textContent = sum;
+        }
+    }
+}
+
+// Attach input event listener to the table
+document.getElementById('constituent-table').addEventListener('input', function(event) {
+    // Get the index of the column where the input occurred
+    var columnIndex = Array.from(event.target.parentNode.children).indexOf(event.target);
+
+    // Exclude rows with the classes 'max-capacity-cell' and 'validation-cell' and 'coefficient-cell'
+    if (!event.target.closest('.max-capacity-cell') && !event.target.closest('.validation-cell') && !event.target.closest('.coefficient-cell')) {
+        updateValidation(event, columnIndex); // Call the updateValidation function with the column index
+    }
+});
+
+
+// Function to calculate the sum of volumes
+function calculateBalanceSum() {
+    var total = 0;
+    var rows = document.querySelectorAll('#reference-table tbody tr');
+
+    rows.forEach(function(row) {
+        var checkbox = row.querySelector('input[type="checkbox"]');
+        var volumeCell = row.querySelector('td:nth-child(4)');
+
+        // Check if both checkbox and volume cell are found
+        if (checkbox && volumeCell) {
+            var constituentVolume = parseInt(volumeCell.textContent.trim().replace(',', ''), 10);
+            var isChecked = checkbox.checked ? 1 : 0;
+
+            total += constituentVolume * isChecked;
+        }
+    });
+
+    // Format the total with thousand separator manually
+    var formattedTotal = total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+    var totalCell = document.getElementById('total-cell');
+    if (totalCell) {
+        totalCell.textContent = formattedTotal;
+    } else {
+        console.error('Total cell not found.');
+    }
+
+    // Calculate and update the balance cell
+    rows.forEach(function(row) {
+        var checkbox = row.querySelector('input[type="checkbox"]');
+        var volumeCell = row.querySelector('td:nth-child(4)'); // Get Constituent_Volume
+        var balanceCell = row.querySelector('#balance-cell');
+
+        if (checkbox && volumeCell && balanceCell) {
+            var constituentVolume = parseInt(volumeCell.textContent.trim().replace(',', ''), 10);
+            var isChecked = checkbox.checked ? 1 : 0;
+            var balance = isChecked ? (constituentVolume / total) * 100 : 0;
+
+            balanceCell.textContent = balance.toFixed(0) + ' %'; // Display balance with two decimal places
+        }
+    });
+}
+document.addEventListener('DOMContentLoaded', function() {
+    calculateBalanceSum(); // Calculate the total initially when the page is loaded
+
+    var checkboxes = document.querySelectorAll('#reference-table tbody tr input[type="checkbox"]');
+    checkboxes.forEach(function(checkbox) {
+        checkbox.addEventListener('change', calculateBalanceSum);
+    });
+});
+
+
+
+
+// Function to validate the user inputs before saving
+function checkValidationCells() {
+    // Check if the table has at least three columns
+    var table = document.getElementById('constituent-table');
+    var headerRow = table.querySelector('thead tr');
+    if (!headerRow || headerRow.cells.length < 3) {
+        alert('Please add at least one Production Mode.');
+        return;
+    }
+
+    // Check if any cell in the max-capacity-cell or coefficient-cell rows is empty
+    var maxCapacityRow = table.querySelector('.max-capacity-cell');
+    var coefficientRow = table.querySelector('.coefficient-cell');
+    var rowsToCheck = [maxCapacityRow, coefficientRow]; // Include coefficient-cell row
+    for (var rowIdx = 0; rowIdx < rowsToCheck.length; rowIdx++) {
+        var row = rowsToCheck[rowIdx];
+        var cells = row.querySelectorAll('td:not(.empty)');
+        for (var i = 0; i < cells.length; i++) {
+            if (cells[i].textContent.trim() === '') {
+                alert('Please fill Modes Capacity or Coefficients.');
+                return;
+            }
+        }
+    }
+
+    var validationCells = document.querySelectorAll('.validation-cell td:not(.validation-header)'); // Exclude the first cell with class 'validation-header'
+    var allOk = true;
+
+    // Iterate over the validation cells
+    for (var i = 0; i < validationCells.length; i++) {
+        var cell = validationCells[i];
+
+        // Get the column index of the current cell
+        var columnIndex = getColumnIndex(cell);
+
+        // Get the text content of the first cell in the same column
+        var firstCell = cell.closest('#constituent-table').querySelector('tr:first-child th:nth-child(' + (columnIndex + 2) + ')');
+        var firstCellText = firstCell ? firstCell.textContent.trim() : '';
+
+        // Check if the column corresponds to a 'Mode' column
+        if (firstCellText.startsWith('Mode')) {
+            if (cell.textContent.trim() !== 'Ok') {
+                allOk = false;
+                break; // Exit the loop early if a cell doesn't contain 'Ok'
+            }
+        }
+    }
+    if (allOk) {
+        sendDataToBackend();
+    } else {
+        alert('Production balance must equal 100% for each mode');
+    }
+}
+
+// Function to calculate the column index of a cell
+function getColumnIndex(cell) {
+    var cells = cell.parentNode.cells;
+    for (var i = 0; i < cells.length; i++) {
+        if (cells[i] === cell) {
+            return i;
+        }
+    }
+    return -1; // Return -1 if the cell is not found (shouldn't happen)
+}
+
+document.getElementById('Save').addEventListener('click', function() {
+    // Call the function to check validation status
+    checkValidationCells();
+});
+
+
+// Function to extract data from the table
+function extractData() {
+    var tableData = [];
+    var table = document.getElementById('constituent-table');
+    var headerRow = table.querySelector('thead tr');
+    var rows = table.querySelectorAll('tbody tr');
+
+    // Extract headers
+    var headers = [];
+    var headerCells = headerRow.querySelectorAll('th');
+    headerCells.forEach(function(cell) {
+        headers.push(cell.textContent.trim());
+    });
+    tableData.push(headers);
+
+    // Extract data rows
+    rows.forEach(function(row) {
+        if (row.classList.contains('empty-row')) {
+            return; // Exit the loop if an empty row is encountered
+        }
+        var rowData = [];
+        var cells = row.querySelectorAll('td');
+        cells.forEach(function(cell, index) {
+            rowData.push(cell.textContent.trim());
+            // Insert an additional cell after the first cell in the row with class 'max-capacity-cell' or 'coefficient-cell'
+            if ((row.classList.contains('max-capacity-cell') || row.classList.contains('coefficient-cell')) && index === 0) {
+                rowData.push(''); // Add an empty cell
+            }
+        });
+        tableData.push(rowData);
+    });
+
+    // Return the extracted data
+    return tableData;
+}
+
+
+
+
+function sendDataToBackend() {
+    // Show the loading spinner before sending data to the backend
+    showLoadingSpinner();
+
+    // Call functions to get data
+    var extractedData = extractData();
+
+    // Stringify the data
+    var jsonData = JSON.stringify(extractedData);
+
+    // Retrieve project_id and quarry_id
+    const project_id = document.getElementById('project_id').value.trim();
+    const quarry_id = document.getElementById('quarry_id').value.trim();
+
+    // Construct the URL
+    const url = `/Existing_Projects/Data_Portal/B4C_Portal/Production_Balance_bridge/${project_id}/${quarry_id}/`;
+
+    // Get CSRF token
+    const csrftoken = getCookie('csrftoken');
+
+    // Create a new XMLHttpRequest
+    const xhr = new XMLHttpRequest();
+
+    // Open the request
+    xhr.open('POST', url, true);
+
+    // Set request headers
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('X-CSRFToken', csrftoken);
+
+    // Define the onload function
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            console.log('Data successfully sent to the backend!');
+
+            // Redirect to Product list page
+            window.location.href = `/Existing_Projects/Data_Portal/B4C_Portal/Results/${project_id}/${quarry_id}/`;
+
+        } else {
+            console.error('Error:', xhr.status);
+
+        }
+    };
+
+    // Send the JSON data
+    xhr.send(jsonData);
+}
+
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+
+{% endblock content %}

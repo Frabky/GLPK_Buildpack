@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Streamsmap - {{ incoterm }}</title>
+</head>
+<body>
+    <h3>{{ incoterm }}</h3>
+
+    {% with streamsmap_file=template_folder|add:'/Streamsmap_baseline_'|add:incoterm|add:'.html' %}
+        {% include streamsmap_file %}
+    {% endwith %}
+</body>
+</html>

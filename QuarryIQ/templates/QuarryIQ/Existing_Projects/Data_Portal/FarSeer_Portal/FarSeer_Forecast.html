@@ -1,0 +1,415 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+
+<title>FarSeer - Sales Forecast</title>
+
+<h2>FarSeer Forecast - Sales Forecast</h2>
+<h4>Project: {{ project_name }} {{ project_time_period }}</h4>
+<h4>Quarry: {{ quarry_name }}</h4>
+
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+
+<div class="table-container" style="max-width: 800px;">
+    <table class="table">
+        <thead>
+            <tr>
+                <th style="vertical-align: middle;">Month</th>
+                <th style="vertical-align: middle;">Max Opening Time [h]</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for index, row in maxOpeningHours_Table.iterrows %}
+                <tr>
+                    <td style="vertical-align: middle;" class="month_name_max_hours">{{ row.Month_Name }}</td>
+                    <td style="vertical-align: middle;" class="max_hours" contenteditable="true" onkeypress="return isNumber(event)">{{ row.Max_Opening_Hours }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+
+{% for month in unique_months %}
+    <table class="table" id="table-{{ month }}">
+        <thead>
+            <tr>
+                <th class="empty"></th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;" colspan="4">SALES HISTORY ({{ project_time_period }})</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;" colspan="4">SALES FORECAST</th>
+
+            </tr>
+            <tr>
+                <th style="vertical-align: middle;" class="month-cell">{{ month|upper }}</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;" colspan="2">Delivered Sales</th>
+                <th style="vertical-align: middle;" colspan="2">Ex-Works Sales</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;" colspan="2">Forced Sales</th>
+                <th style="vertical-align: middle;" colspan="2">Non Essential Sales</th>
+            </tr>
+            <tr>
+                <th style="vertical-align: middle;">Product</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;">Sales Volume [t]</th>
+                <th style="vertical-align: middle;">Av. Sales Price [{{ currency }}/t]</th>
+                <th style="vertical-align: middle;">Sales Volume [t]</th>
+                <th style="vertical-align: middle;">Av. Sales Price [{{ currency }}/t]</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;">Sales Volume [t]</th>
+                <th style="vertical-align: middle;">Av. Sales Price [{{ currency }}/t]</th>
+                <th style="vertical-align: middle;">Sales Volume [t]</th>
+                <th style="vertical-align: middle;">Av. Sales Price [{{ currency }}/t]</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for index, row in salesForecast_Table.iterrows %}
+                {% if row.Month_Name  == month %}
+                    <tr>
+                        <td style="vertical-align: middle;" class="product-cell">{{ row.Product }}</td>
+                        <td class="space"></td>
+                        <td style="vertical-align: middle;" class="Sales-DAP">{{ row.Sales_Volume_DAP }}</td>
+                        <td style="vertical-align: middle;">{{ row.ASP_DAP }}</td>
+                        <td style="vertical-align: middle;" class="Sales-EXW">{{ row.Sales_Volume_EXW }}</td>
+                        <td style="vertical-align: middle;">{{ row.ASP_EXW }}</td>
+                        <td class="space"></td>
+                        <td style="vertical-align: middle;" class="Forcast-Forced-Sales" contenteditable="true" onkeypress="return isNumber(event)">{{ row.Sales_Volume_Forced }}</td>
+                        <td style="vertical-align: middle;" class="Forcast-Forced-ASP" contenteditable="true" onkeypress="return isFloat(event)">{{ row.ASP_Forced }}</td>
+                        <td style="vertical-align: middle;" class="Forcast-Non-Essential-Sales" contenteditable="true" onkeypress="return isNumber(event)">{{ row.Sales_Volume_Non_Essential }}</td>
+                        <td style="vertical-align: middle;" class="Forcast-Non-Essential-ASP" contenteditable="true" onkeypress="return isFloat(event)">{{ row.ASP_Non_Essential }}</td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+
+            <tr>
+                <th style="vertical-align: middle;">Total</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;" class="total-Sales-DAP"></th>
+                <th style="vertical-align: middle;" class="empty"></th>
+                <th style="vertical-align: middle;" class="total-Sales-EXW"></th>
+                <th style="vertical-align: middle;" class = "empty"></th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;" class="total-Forcast-Forced-Sales"></th>
+                <th style="vertical-align: middle;" class = "empty"></th>
+                <th style="vertical-align: middle;" class="total-Non-Essential-Sales"></th>
+                <th style="vertical-align: middle;" class = "empty"></th>
+            </tr>
+        </tbody>
+    </table>
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+{% endfor %}
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+<button class='btn btn-warning' style="width: 250px;" id="submit" type="submit">Save</button>
+
+
+<input type="hidden" id="project_id" value="{{ project_id }}">
+<input type="hidden" id="quarry_id" value="{{ quarry_id }}">
+
+
+
+<script>
+    {% for month in unique_months %}
+
+    var table = document.getElementById("table-{{ month }}");
+
+    // total sales volume for DAP category
+    var salesDapCells = table.getElementsByClassName("Sales-DAP");
+    var totalSalesDapCells = table.getElementsByClassName("total-Sales-DAP");
+    var totalSalesDap = 0;
+
+    // Iterate over cells containing DAP sales volume and sum up their values
+    for (var i = 0; i < salesDapCells.length; i++) {
+        // Remove commas from the innerText before parsing
+        var salesVolume = salesDapCells[i].innerText.replace(/,/g, '');
+        totalSalesDap += parseFloat(salesVolume);
+    }
+
+    // Update the content of all total sales volume cells
+    for (var i = 0; i < totalSalesDapCells.length; i++) {
+        totalSalesDapCells[i].innerText = totalSalesDap.toLocaleString("en-US");
+    }
+
+    // total sales volume for EXW category
+    var salesEXWCells = table.getElementsByClassName("Sales-EXW");
+    var totalSalesEXWCells = table.getElementsByClassName("total-Sales-EXW");
+    var totalSalesEXW = 0;
+
+    // Iterate over cells containing EXW sales volume and sum up their values
+    for (var i = 0; i < salesEXWCells.length; i++) {
+        // Remove commas from the innerText before parsing
+        var salesVolume = salesEXWCells[i].innerText.replace(/,/g, '');
+        totalSalesEXW += parseFloat(salesVolume);
+    }
+
+    // Update the content of all total sales volume cells
+    for (var i = 0; i < totalSalesEXWCells.length; i++) {
+        totalSalesEXWCells[i].innerText = totalSalesEXW.toLocaleString("en-US");
+    }
+
+    {% endfor %}
+
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Select all table elements
+    var tables = document.querySelectorAll('table');
+
+    // Iterate over each table and call updateTotalSales() function
+    tables.forEach(function(table) {
+        updateTotalSales(table);
+    });
+});
+
+function isNumber(evt) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+
+    if (charCode === 45) { // If the character is "-"
+        return false; // Prevent input of "-"
+    } else if (charCode === 8) { // If the character is backspace
+        return true; // Allow backspace
+    } else if (charCode !== 43 && (charCode < 48 || charCode > 57)) {
+        return false; // Only allow digits and backspace
+    }
+    return true;
+}
+
+function isFloat(evt) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+    if (charCode === 46) { // If the character is "."
+        var input = evt.target.textContent;
+        if (input.indexOf('.') !== -1) {
+            return false; // Only allow one decimal point
+        }
+    } else if (charCode !== 8 && (charCode < 48 || charCode > 57)) {
+        return false; // Only allow digits and backspace
+    }
+    return true;
+}
+
+function updateTotalSales(table) {
+    // total sales volume for Forecast-Forced-Sales and Forecast-Non-Essential-Sales
+    var salesForcedCells = table.getElementsByClassName("Forcast-Forced-Sales");
+    var totalSalesForcedCells = table.getElementsByClassName("total-Forcast-Forced-Sales");
+    var totalSalesForced = 0;
+
+    // Iterate over cells containing Forced sales volume and sum up their values
+    for (var i = 0; i < salesForcedCells.length; i++) {
+        // Remove commas from the innerText before parsing
+        var salesVolumeText = salesForcedCells[i].innerText.trim(); // Trim whitespace
+        var salesVolume = salesVolumeText !== "" ? parseFloat(salesVolumeText.replace(/,/g, '')) : 0; // Treat empty cells as 0
+        totalSalesForced += isNaN(salesVolume) ? 0 : salesVolume; // Check if parsed value is NaN
+    }
+
+    // Update the content of all total sales volume cells
+    for (var i = 0; i < totalSalesForcedCells.length; i++) {
+        totalSalesForcedCells[i].innerText = totalSalesForced.toLocaleString("en-US");
+    }
+
+
+    var salesNonEssentialCells = table.getElementsByClassName("Forcast-Non-Essential-Sales");
+    var totalSalesNonEssentialCells = table.getElementsByClassName("total-Non-Essential-Sales");
+    var totalSalesNonEssential = 0;
+
+    // Iterate over cells containing Non Essential sales volume and sum up their values
+    for (var i = 0; i < salesNonEssentialCells.length; i++) {
+        // Remove commas from the innerText before parsing
+        var salesVolumeText = salesNonEssentialCells[i].innerText.trim(); // Trim whitespace
+        var salesVolume = salesVolumeText !== "" ? parseFloat(salesVolumeText.replace(/,/g, '')) : 0; // Treat empty cells as 0
+        totalSalesNonEssential += isNaN(salesVolume) ? 0 : salesVolume; // Check if parsed value is NaN
+    }
+
+    // Update the content of all total sales volume cells
+    for (var i = 0; i < totalSalesNonEssentialCells.length; i++) {
+        totalSalesNonEssentialCells[i].innerText = totalSalesNonEssential.toLocaleString("en-US");
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    var editableCells = document.querySelectorAll('.Forcast-Forced-Sales, .Forcast-Non-Essential-Sales');
+
+    editableCells.forEach(function(cell) {
+        cell.addEventListener('input', function() {
+            var table = cell.closest("table"); // Get the closest table element
+            updateTotalSales(table);
+        });
+    });
+});
+
+
+
+document.getElementById('submit').addEventListener('click', function() {
+    replaceCommasWithEmptyStrings();
+    sendDataToBackend();
+});
+
+function replaceCommasWithEmptyStrings() {
+    // Select the elements with the specified classes
+    var forecastForcedSalesCells = document.querySelectorAll('.Forcast-Forced-Sales');
+    var forecastNonEssentialSalesCells = document.querySelectorAll('.Forcast-Non-Essential-Sales');
+
+    // Replace commas with empty strings for each element
+    forecastForcedSalesCells.forEach(function(cell) {
+        cell.textContent = cell.textContent.replace(/,/g, '');
+    });
+
+    forecastNonEssentialSalesCells.forEach(function(cell) {
+        cell.textContent = cell.textContent.replace(/,/g, '');
+    });
+}
+
+
+function extractDataForecast() {
+    // Initialize combinedValues array with header row
+    var combinedValues = [["Month_Name", "Product", "Sales_Volume_Forced", "ASP_Forced", "Sales_Volume_Non_Essential", "ASP_Non_Essential"]];
+
+    // Iterate over each month
+    {% for month in unique_months %}
+        var month = "{{ month }}"; // Get the month name
+        var monthCells = document.querySelectorAll('#table-{{ month }} .month-cell');
+        var productCells = document.querySelectorAll('#table-{{ month }} .product-cell');
+        var forcastForcedSalesCells = document.querySelectorAll('#table-{{ month }} .Forcast-Forced-Sales');
+        var forcastForcedASPCells = document.querySelectorAll('#table-{{ month }} .Forcast-Forced-ASP');
+        var forecastNonEssSalesCells = document.querySelectorAll('#table-{{ month }} .Forcast-Non-Essential-Sales');
+        var forecastNonEssASPCells = document.querySelectorAll('#table-{{ month }} .Forcast-Non-Essential-ASP');
+
+        // Iterate over each product cell
+        productCells.forEach(function(productCell, index) {
+            // Get the corresponding cells using the same index
+            var forcastForcedSalesCell = forcastForcedSalesCells[index];
+            var forcastForcedASPCell = forcastForcedASPCells[index];
+            var forecastNonEssSalesCell = forecastNonEssSalesCells[index];
+            var forecastNonEssASPCell = forecastNonEssASPCells[index];
+
+            // Extract text content from all cells
+            var productValue = productCell.textContent.trim();
+            var forecastForcedSales = forcastForcedSalesCell.textContent.trim(); // Use textContent to get user input
+            var forecastForcedASP = forcastForcedASPCell.textContent.trim(); // Use textContent to get user input
+            var forecastNonEssSales = forecastNonEssSalesCell.textContent.trim(); // Use textContent to get user input
+            var forecastNonEssASP = forecastNonEssASPCell.textContent.trim(); // Use textContent to get user input
+
+            // Add the product value, delta sales value, and sales price value to the combinedValues array
+            combinedValues.push([month, productValue, forecastForcedSales, forecastForcedASP, forecastNonEssSales, forecastNonEssASP]);
+        });
+    {% endfor %}
+
+    return combinedValues;
+}
+
+function extractDataMaxHours() {
+    // Initialize maxOpeningHours array with header row
+    var maxOpeningHours = [["Month", "Max_Opening_Hours"]];
+
+    var monthCells = document.querySelectorAll('.month_name_max_hours');
+    var maxOpeningHoursCells = document.querySelectorAll('.max_hours');
+
+    // Iterate over each product cell
+    monthCells.forEach(function(monthCell, index) {
+        // Get the corresponding cells using the same index
+        var maxOpeningHoursCell = maxOpeningHoursCells[index];
+
+        // Extract text content from all cells
+        var monthValue = monthCell.textContent.trim();
+        var maxOpeningHoursValue = maxOpeningHoursCell.textContent.trim(); // Use textContent to get user input
+
+        // Add the product value, delta sales value, and sales price value to the maxOpeningHours array
+        maxOpeningHours.push([monthValue, maxOpeningHoursValue]);
+    });
+
+    return maxOpeningHours;
+}
+
+
+function sendDataToBackend() {
+
+    showLoadingSpinner()
+
+    // Call functions to get data
+    var extractedDataForecast = extractDataForecast();
+    var extractedDataMaxHours = extractDataMaxHours();
+
+    // Create an object to hold both data sets
+    var combinedData = {
+        forecast: extractedDataForecast,
+        maxHours: extractedDataMaxHours
+    };
+
+    // Stringify the combined data
+    var jsonData = JSON.stringify(combinedData);
+
+    // Retrieve project_id and quarry_id
+    const project_id = document.getElementById('project_id').value.trim();
+    const quarry_id = document.getElementById('quarry_id').value.trim();
+
+    // Construct the URL
+    const url = `/Existing_Projects/Data_Portal/FarSeer_Portal/Forecast_bridge/${project_id}/${quarry_id}/`;
+
+    // Get CSRF token
+    const csrftoken = getCookie('csrftoken');
+
+    // Create a new XMLHttpRequest
+    const xhr = new XMLHttpRequest();
+
+    // Open the request
+    xhr.open('POST', url, true);
+
+    // Set request headers
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('X-CSRFToken', csrftoken);
+
+    // Define the onload function
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            console.log('Data successfully sent to the backend!');
+            // Redirect to Product list page
+            window.location.href = `/Existing_Projects/Data_Portal/FarSeer_Portal/Results_Summary/${project_id}/${quarry_id}/`;
+        } else {
+            console.error('Error:', xhr.status);
+        }
+    };
+
+    // Send the JSON data
+    xhr.send(jsonData);
+}
+
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+
+{% endblock content %}
