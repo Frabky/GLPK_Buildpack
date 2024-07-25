@@ -4,9 +4,9 @@ from django.contrib.auth.models import User
 from uuid import uuid4
 import uuid
 import shutil
+from django.conf import settings
 
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 class ProjectData(models.Model):
@@ -46,11 +46,11 @@ class ProjectData(models.Model):
         super().delete(*args, **kwargs)
 
     def Existing_Projects_Data_Portal_path(self):
-        return os.path.join(BASE_DIR, 'QuarryIQ', 'templates', 'QuarryIQ', 'Project_Data', self.project_id)
+        return os.path.join(settings.BASE_DIR, 'QuarryIQ', 'templates', 'QuarryIQ', 'Project_Data', self.project_id)
     def Heatmap_folder_path(self):
-        return os.path.join(BASE_DIR, 'QuarryIQ', 'templates', 'QuarryIQ', 'Project_Data', self.project_id, 'Heatmaps')
+        return os.path.join(settings.BASE_DIR, 'QuarryIQ', 'templates', 'QuarryIQ', 'Project_Data', self.project_id, 'Heatmaps')
     def Streamsmap_folder_path(self):
-        return os.path.join(BASE_DIR, 'QuarryIQ', 'templates', 'QuarryIQ', 'Project_Data', self.project_id, 'Streamsmaps')
+        return os.path.join(settings.BASE_DIR, 'QuarryIQ', 'templates', 'QuarryIQ', 'Project_Data', self.project_id, 'Streamsmaps')
 
 class Quarry(models.Model):
     quarry_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
