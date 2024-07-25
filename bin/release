@@ -1,10 +1,4 @@
-#!/bin/sh
-
-echo "-----> GLPK buildpack release"
-
-# This is the correct format for the release script
-cat <<EOF
 ---
 config_vars:
-- GLPK_BIN
-EOF
+  - GLPK_BIN
+
