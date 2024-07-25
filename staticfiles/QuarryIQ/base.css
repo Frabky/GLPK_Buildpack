@@ -1,0 +1,34 @@
+
+th, td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+
+th.empty,
+td.empty {
+    border: none;
+    height: 10px;
+}
+
+
+body {
+    margin: 30px;
+    background-color: #f6f9fc;
+}
+
+
+
+td.space {
+    width: 30px;
+    min-width: 10px;
+    max-width: 10px;
+    border: none;
+}
+
+
+/* P4P_PL_allocation */
+td.pasteable {
+    white-space: pre-wrap; /* Wrap text within cells */
+    word-wrap: break-word; /* Allow word break */
+}

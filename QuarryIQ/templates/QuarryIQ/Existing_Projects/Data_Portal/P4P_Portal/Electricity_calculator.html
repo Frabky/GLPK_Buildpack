@@ -1,0 +1,203 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+
+<title>P4P - Electricity Calculator</title>
+
+<h2>Production for Profit - Electricity Calculator</h2>
+<h4>Project: {{ project_name }} {{ project_time_period }}</h4>
+<h4>Quarry: {{ quarry_name }}</h4>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+    <div class="table-container" style="max-width: 1000px;">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Unit</th>
+                    <!-- Loop through costBoxProdVolume_data to generate headers -->
+                    {% for costBox in costBoxes %}
+                        <th>{{ costBox }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Installed Power</td>
+                    <td>[kW]</td>
+                    {% for costBox in costBoxes %}
+                        <td class="installed_power" contenteditable="true" onkeypress="return isNumber(event)"></td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td>Operating Time</td>
+                    <td>[h]</td>
+                    {% for costBox in costBoxes %}
+                        <td class="operating_hours" contenteditable="true" onkeypress="return isNumber(event)"></td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td>Energy Consumption</td>
+                    <td>[kWh]</td>
+                    {% for costBox in costBoxes %}
+                         <td class="energy_consumption"></td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td>Energy Distribution</td>
+                    <td>[%]</td>
+                    {% for costBox in costBoxes %}
+                         <td class="energy_distribution"></td>
+                    {% endfor %}
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+<button class="btn btn-outline-dark" id="Close">Close</button>
+
+
+<script>
+function isNumber(evt) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+
+    if (charCode === 45) { // If the character is "-"
+        return false; // Prevent input of "-"
+    } else if (charCode === 8) { // If the character is backspace
+        return true; // Allow backspace
+    } else if (charCode !== 43 && (charCode < 48 || charCode > 57)) {
+        return false; // Only allow digits and backspace
+    }
+    return true;
+}
+
+
+function calculateEnergyConsumption() {
+    // Select all installed power and operating hours cells
+    var installedPowerCells = document.querySelectorAll('.installed_power');
+    var operatingHoursCells = document.querySelectorAll('.operating_hours');
+    var energyConsumptionCells = document.querySelectorAll('.energy_consumption');
+
+    // Loop through each column (assuming the number of columns is the same for installed power, operating hours, and energy consumption)
+    for (var i = 0; i < installedPowerCells.length; i++) {
+        // Parse installed power and operating hours values from cells in the current column
+        var installedPower = parseInt(installedPowerCells[i].textContent);
+        var operatingHours = parseInt(operatingHoursCells[i].textContent);
+
+        // Calculate energy consumption as the product of installed power and operating hours
+        var energyConsumption = installedPower * operatingHours;
+
+        // Update the energy consumption cell in the current column with the calculated value
+        energyConsumptionCells[i].textContent = energyConsumption;
+
+        // Check if the calculated value is NaN, and update the energy consumption cell accordingly
+        if (isNaN(energyConsumption)) {
+            energyConsumptionCells[i].textContent = "";
+        } else {
+            // Update the energy consumption cell in the current column with the calculated value
+            energyConsumptionCells[i].textContent = energyConsumption;
+        }
+    }
+}
+
+// Add event listener to trigger calculation when any installed power or operating hours cell is edited
+document.querySelectorAll('.installed_power, .operating_hours').forEach(function(cell) {
+    cell.addEventListener('input', calculateEnergyConsumption);
+});
+
+// Initial calculation when the page loads
+calculateEnergyConsumption();
+calculateTotalEnergyConsumption();
+
+
+
+
+// Global variable to store the sum of energy consumption
+var totalEnergyConsumption = 0;
+
+// Function to calculate the sum of energy consumption cells
+function calculateTotalEnergyConsumption() {
+    // Select all energy consumption cells
+    var energyConsumptionCells = document.querySelectorAll('.energy_consumption');
+
+    // Reset totalEnergyConsumption to 0 before recalculating
+    totalEnergyConsumption = 0;
+
+    // Loop through each energy consumption cell
+    energyConsumptionCells.forEach(function(cell) {
+        // Parse the text content of the cell as an integer and add it to totalEnergyConsumption
+        var energyConsumption = parseInt(cell.textContent);
+        if (!isNaN(energyConsumption)) {
+            totalEnergyConsumption += energyConsumption;
+        }
+    });
+}
+
+// Add event listeners to installed_power and operating_hours cells
+document.querySelectorAll('.installed_power, .operating_hours').forEach(function(cell) {
+    cell.addEventListener('input', calculateTotalEnergyConsumption);
+    cell.addEventListener('input', calculateEnergyDistribution);
+});
+
+
+
+
+// Function to calculate energy distribution
+function calculateEnergyDistribution() {
+    // Get the total energy consumption
+    var totalEnergyConsumption = 0;
+
+    // Calculate the total energy consumption by summing up all energy consumption values
+    var energyConsumptionCells = document.querySelectorAll('.energy_consumption');
+    energyConsumptionCells.forEach(function(cell) {
+        var energyConsumption = parseFloat(cell.textContent);
+        if (!isNaN(energyConsumption)) {
+            totalEnergyConsumption += energyConsumption;
+        }
+    });
+
+    // Select all energy consumption and energy distribution cells
+    var energyConsumptionCells = document.querySelectorAll('.energy_consumption');
+    var energyDistributionCells = document.querySelectorAll('.energy_distribution');
+
+    // Loop through each row
+    energyConsumptionCells.forEach(function(cell, index) {
+        // Parse energy consumption value from cell
+        var energyConsumption = parseFloat(cell.textContent);
+
+        // Calculate energy distribution as a percentage
+        var energyDistribution = energyConsumption / totalEnergyConsumption * 100;
+
+        // Update the energy distribution cell with the calculated value
+        var distributionCell = energyDistributionCells[index];
+        distributionCell.textContent = isNaN(energyDistribution) ? "" : energyDistribution.toFixed(0); // Display blank if NaN
+    });
+}
+
+
+
+
+
+
+
+    // Get a reference to the button element
+    var closeButton = document.getElementById('Close');
+
+    // Add an event listener to the button for the click event
+    closeButton.addEventListener('click', function() {
+        // Close the current window/tab
+        window.close();
+    });
+
+
+</script>
+
+{% endblock content%}

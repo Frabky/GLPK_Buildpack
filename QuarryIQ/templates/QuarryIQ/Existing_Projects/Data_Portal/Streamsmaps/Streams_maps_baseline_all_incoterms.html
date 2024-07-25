@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Streamsmap - All Deliveries</title>
+</head>
+<body>
+    <h3>All Deliveries</h3>
+
+    {% with streamsmap_file=template_folder|add:'/Streamsmap_baseline_all_incoterms.html' %}
+        {% include streamsmap_file %}
+    {% endwith %}
+
+</body>
+</html>

@@ -1,0 +1,145 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+
+<title>Quarry IQ - Modify Information</title>
+
+<h2>Quarry IQ - Modify Information</h2>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+<div class="table-container" style="max-width: 1200px;">
+    <table class="table">
+        <tr>
+            <th class="empty"></th>
+            <th style="vertical-align: middle; width: 400px;">Old Information</th>
+            <th style="vertical-align: middle; width: 400px;">New Information</th>
+        </tr>
+        <tr>
+            <th style="vertical-align: middle; width: 400px;">Company Name</th>
+            <td style="vertical-align: middle; width: 400px;">{{ project_company }}</td>
+            <td style="vertical-align: middle; width: 400px;" id="projectCompany">{{ project_company }}</td>
+        </tr>
+        <tr>
+            <th style="vertical-align: middle; width: 400px;">Project Name</th>
+            <td style="vertical-align: middle; width: 400px;">{{ project_name }}</td>
+            <td style="vertical-align: middle; width: 400px;" contenteditable="true" id="projectName"></td>
+        </tr>
+        <tr>
+            <th style="vertical-align: middle; width: 400px;">Considered Time Period</th>
+            <td style="vertical-align: middle; width: 400px;">{{ project_time_period }}</td>
+            <td style="vertical-align: middle; width: 400px;" contenteditable="true" id="timePeriod"></td>
+        </tr>
+        <tr>
+            <th style="vertical-align: middle; width: 400px;">Currency</th>
+            <td style="vertical-align: middle; width: 400px;">{{ currency }}</td>
+            <td style="vertical-align: middle; width: 400px;" id="currency" contenteditable="true"></td>
+        </tr>
+        <tr><td class="empty"></td></tr>
+        <tr>
+            <td class="empty">
+                    <button style="width: 250px;" id="save" class='btn btn-outline-success'>Save</button>
+            </td>
+        </tr>
+    </table>
+</div>
+
+    <input type="hidden" id="project_id" value="{{ project_id }}">
+
+<script>
+
+document.getElementById("save").addEventListener("click", sendDataToBackend);
+
+
+function extractData() {
+    var projectCompany = document.getElementById("projectCompany").textContent;
+    var projectName = document.getElementById("projectName").textContent;
+    var timePeriod = document.getElementById("timePeriod").textContent;
+    var currency = document.getElementById("currency").textContent;
+
+    if (projectCompany.trim() === '' || projectName.trim() === '' || timePeriod.trim() === '' || currency.trim() === '') {
+        return;
+    } else {
+        // Proceed with extracting data if the form is complete
+        return {
+            projectCompany: projectCompany.trim(),
+            projectName: projectName.trim(),
+            timePeriod: timePeriod.trim(),
+            currency: currency.trim()
+        };
+    }
+}
+
+
+
+function sendDataToBackend() {
+    var data = extractData();
+
+    // Check if data is undefined (indicating incomplete form)
+    if (!data) {
+        // Alert the user to complete the form
+        alert("Please complete the form before proceeding.");
+        return; // Stop further execution
+    }
+
+    // Stringify the data
+    var jsonData = JSON.stringify(data);
+
+    // Retrieve project_id from hidden input field
+    var project_id = document.getElementById("project_id").value;
+
+    // Construct the URL
+    const url = `/New_Project/General_Info_bridge/${project_id}/`;
+
+    // Get CSRF token
+    const csrftoken = getCookie('csrftoken');
+
+    // Create a new XMLHttpRequest
+    const xhr = new XMLHttpRequest();
+
+    // Open the request
+    xhr.open('POST', url, true);
+
+    // Set request headers
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('X-CSRFToken', csrftoken);
+
+    // Define the onload function
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            console.log('Data successfully sent to the backend!');
+            // Redirect to Product Cleaning page
+            window.location.href = `/Project_List/`;
+        } else {
+            console.error('Error:', xhr.status);
+        }
+    };
+
+    // Send the JSON data
+    xhr.send(jsonData);
+}
+
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+</script>
+
+{% endblock content %}

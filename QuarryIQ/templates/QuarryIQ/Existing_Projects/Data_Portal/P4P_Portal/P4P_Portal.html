@@ -1,0 +1,51 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+
+<title>Quarry IQ - Production for Profit Portal</title>
+
+<h2>Quarry IQ - Production for Profit Portal</h2>
+<h4>Project: {{ project_name }} {{ project_time_period }}</h4>
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+<div class="table-container" style="max-width: 1000px;">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Quarry</th>
+                {% if is_editor %}
+                <th>Edition</th>
+                {% endif %}
+                <th>Results</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for index, row in P4P_empty_df.iterrows %}
+            <tr>
+                <td style="vertical-align: middle;">{{ row.Quarry }}</td>
+                {% if is_editor %}
+                <td>
+                    <form action="{% url 'P4P_Cluster_to_box' project_id=project_data.project_id quarry_id=row.Quarry_ID %}" method="get">
+                        <button class='btn btn-outline-dark' type="submit" style="width: 250px;">Edit</button>
+                    </form>
+                </td>
+                {% endif %}
+                {% if not row.Condition and not row.clusterToBox_change %}
+                <td>
+                    <form action="{% url 'P4P_Results' project_id=project_data.project_id quarry_id=row.Quarry_ID %}" method="get" onsubmit="showLoadingSpinner()">
+                        <button class='btn btn-warning' type="submit" style="width: 250px;">Results</button>
+                    </form>
+                </td>
+                {% else %}
+                <td></td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock content %}

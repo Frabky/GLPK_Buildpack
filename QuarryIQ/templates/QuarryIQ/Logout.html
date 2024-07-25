@@ -1,0 +1,19 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+
+<title>Sagitta Nova - Logout</title>
+
+<div class="container">
+    <div class="alert alert-success" role="alert">
+        You have been successfully logged out.
+    </div>
+</div>
+
+<script>
+    setTimeout(function() {
+        window.location.href = "{% url 'Home' %}";
+    }, 3000);  // Redirect to home page after 2 seconds (2000 milliseconds)
+</script>
+
+{% endblock content %}

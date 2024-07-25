@@ -1,0 +1,88 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+
+<title>Quarry IQ - Model Portal</title>
+
+<h2>Quarry IQ - Model Portal</h2>
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+<div class="table-container">
+    <form id="uploadForm" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Optimisation Model</th>
+                    <th>Uploaded File Name</th>
+                    <th>Last Upload</th>
+                    <th>File</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for key, info in file_info.items %}
+                <tr>
+                    <td style="vertical-align: middle;">{{ info.file_name }}</td>
+                    <td style="vertical-align: middle;">
+                        {% if info.uploaded_file_name %}
+                            {{ info.uploaded_file_name }}
+                        {% else %}
+                            No upload yet
+                        {% endif %}
+                    </td>
+                    <td style="vertical-align: middle;">
+                        {% if info.upload_date %}
+                            {{ info.upload_date|date:"Y-m-d H:i:s" }}
+                        {% else %}
+                            No upload yet
+                        {% endif %}
+                    </td>
+                    <td style="vertical-align: middle; display: flex; align-items: center;">
+                        <input type="file" id="{{ key }}" name="{{ key }}" style="display: none;">
+                        <label for="{{ key }}" id="{{ key }}_Label" class="btn btn-outline-dark" style="width: 500px; margin: 0 auto;">Choose File</label>
+                    </td>
+                    <td class="empty" style="vertical-align: middle;">
+                        <button type="submit" id="upload_{{ key }}" class="btn btn-outline-warning" style="width: 250px;">Upload</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="submit" formmethod="post" formaction="{% url 'flush_uploaded_glpk' %}" class="btn btn-outline-danger" style="width: 250px; margin-top: 20px;" onclick="return confirmFlush();">Flush All</button>
+    </form>
+</div>
+
+
+<script>
+
+// JavaScript to update the text of the "Choose File" button with the selected file name
+document.addEventListener('DOMContentLoaded', function() {
+    // Iterate over each file input and corresponding label
+    document.querySelectorAll('input[type="file"]').forEach(function(input) {
+        const label = document.querySelector('label[for="' + input.id + '"]');
+
+        // Add change event listener to each file input
+        input.addEventListener('change', function() {
+            updateChooseFileButton(input, label);
+        });
+    });
+});
+
+function updateChooseFileButton(inputElement, buttonElement) {
+    if (inputElement.files.length > 0) {
+        const fileName = inputElement.files[0].name;
+        buttonElement.textContent = fileName;
+    } else {
+        buttonElement.textContent = 'Choose File';
+    }
+}
+
+function confirmFlush() {
+    return confirm("Are you sure you want to flush all records? This action cannot be undone.");
+}
+
+</script>
+{% endblock content %}

@@ -1,0 +1,676 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+
+<title>P4P - P&L Allocation</title>
+
+<h2>Production for Profit - P&L Allocation</h2>
+<h4>Project: {{ project_name }} {{ project_time_period }}</h4>
+<h4>Quarry: {{ quarry_name }}</h4>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+
+<button class="btn btn-outline-dark" id="addNewLine" style="width: 250px;">Add P&L Line</button>
+<button class="btn btn-outline-dark" id="elecCalculator" style="width: 250px; margin-left: 20px;">Electricity Calculator</button>
+<button class="btn btn-outline-dark" id="deleteDataButton" style="width: 250px; margin-left: 20px;">Clear P&L Data</button>
+<button class="btn btn-warning" id="save" style="width: 250px; margin-left: 20px;">Save</button>
+
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+    <table class="table" id="table">
+        <thead>
+            <tr>
+                <th style="vertical-align: middle;" colspan="2">P&L Data {{ project_time_period }}</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;" colspan="2">P&L Cost Selection</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;" colspan="{{ unique_cost_boxes|length }}">Cost Box Allocation [%]</th>
+                <td class="space"></td>
+                <th class="empty"></th>
+            </tr>
+            <tr>
+                <th style="vertical-align: middle;" class="costLabel">Cost Label</th>
+                <th style="vertical-align: middle;">Cost [k{{ currency }}]</th>
+                <td class="space"></td>
+                <th style="vertical-align: middle;" class="select">Select</th>
+                <th style="vertical-align: middle;">Cost Type</th>
+                <td class="space"></td>
+                {% for costBox in unique_cost_boxes %}
+                    <th style="vertical-align: middle;" class="costBox">{{ costBox }}</th>
+                {% endfor %}
+                <td class="space"></td>
+                <th style="vertical-align: middle;">Validation</th>
+            </tr>
+        </thead>
+        <tbody id="pastedDataBody">
+
+        {% if PLAllocationData_df.empty and clusterToBox_df_change %} <!-- New P4P -->
+
+            {% for _ in line_numbers  %}
+                <tr>
+                    <td class="pasteable" contenteditable="true" style="vertical-align: middle;"></td>
+                    <td class="pasteable" contenteditable="true" onkeypress="return isFloat(event)" style="vertical-align: middle;"></td>
+                    <td class="space"></td>
+                    <td class="select" style="vertical-align: middle;"><input type="checkbox" class="main-checkbox"></td>
+                    <td>
+                        <select class="custom-select" name="costType" style="width: 100%; display: none; vertical-align: middle;">
+                            <option value="" disabled selected style="text-align: center;">Select</option>
+                            <option value="Variable" style="text-align: center;">Variable</option>
+                            <option value="Fixed" style="text-align: center;">Fixed</option>
+                        </select>
+                    </td>
+                    <td class="space"></td>
+                    {% for costBox in unique_cost_boxes %}
+                        <td class="costBoxValue" onkeypress="return isNumber(event)" style="vertical-align: middle;"></td>
+                    {% endfor %}
+
+                    <td class="space"></td>
+                    <td class="validation" style="vertical-align: middle;"></td>
+                </tr>
+            {% endfor %}
+
+        {% else %}
+
+            {% if not PLAllocationData_df.empty and not clusterToBox_df_change %} <!-- Existing P4P / No Change in Cluster to Box -->
+
+                {% for row in PLAllocationData_dict  %}
+                    <tr>
+                        <td class="pasteable" contenteditable="true" style="vertical-align: middle;">{{ row.Cost_Label }}</td>
+                        <td class="pasteable" contenteditable="true" onkeypress="return isFloat(event)" style="vertical-align: middle;">{{ row.Cost }}</td>
+                        <td class="space"></td>
+                        <td class="select" style="vertical-align: middle;"><input type="checkbox" class="main-checkbox" {% if row.Select == "Checked" %}checked{% endif %}></td>
+                        <td>
+                            <select class="custom-select" name="costType" style="width: 100%; display: none; vertical-align: middle;">
+                                <option disabled selected style="text-align: center;">{{ row.Cost_Type }}</option>
+                                <option value="Variable" style="text-align: center;">Variable</option>
+                                <option value="Fixed" style="text-align: center;">Fixed</option>
+                            </select>
+                        </td>
+                        <td class="space"></td>
+                        {% for costBoxValue in row.CostBoxValues %}
+                            <td class="costBoxValue" onkeypress="return isNumber(event)" style="vertical-align: middle;">{{ costBoxValue }}</td>
+                        {% endfor %}
+
+                        <td class="space"></td>
+                        <td class="validation" style="vertical-align: middle;"></td>
+                    </tr>
+                {% endfor %}
+
+            {% else %} <!-- Existing P4P / Changes in Cluster to Box -->
+
+                {% for row in PLAllocationData_dict  %}
+                    <tr>
+                        <td class="pasteable" contenteditable="true" style="vertical-align: middle;">{{ row.Cost_Label }} </td>
+                        <td class="pasteable" contenteditable="true" onkeypress="return isFloat(event)" style="vertical-align: middle;">{{ row.Cost }}</td>
+                        <td class="space"></td>
+                        <td class="select" style="vertical-align: middle;"><input type="checkbox" class="main-checkbox" {% if row.Select == "Checked" %}checked{% endif %}></td>
+                        <td>
+                            <select class="custom-select" name="costType" style="width: 100%; display: none; vertical-align: middle;">
+                                <option disabled selected style="text-align: center;">{{ row.Cost_Type }}</option>
+                                <option value="Variable" style="text-align: center;">Variable</option>
+                                <option value="Fixed" style="text-align: center;">Fixed</option>
+                            </select>
+                        </td>
+                        <td class="space"></td>
+                        {% for costBox in unique_cost_boxes %}
+                            <td class="costBoxValue" onkeypress="return isNumber(event)" style="vertical-align: middle;"></td>
+                        {% endfor %}
+
+                        <td class="space"></td>
+                        <td class="validation" style="vertical-align: middle;"></td>
+                    </tr>
+                {% endfor %}
+
+            {% endif %}
+
+        {% endif %}
+
+        </tbody>
+    </table>
+
+    <input type="hidden" id="project_id" value="{{ project_id }}">
+    <input type="hidden" id="quarry_id" value="{{ quarry_id }}">
+    <input type="hidden" id="costBoxes" value="{{ costBoxes }}">
+
+<script>
+
+function isNumber(evt) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+
+    if (charCode === 45) { // If the character is "-"
+        return false; // Prevent input of "-"
+    } else if (charCode === 8) { // If the character is backspace
+        return true; // Allow backspace
+    } else if (charCode !== 43 && (charCode < 48 || charCode > 57)) {
+        return false; // Only allow digits and backspace
+    }
+    return true;
+}
+
+function isFloat(evt) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+    var input = evt.target.textContent;
+
+    // Allow negative sign at the beginning of the input
+    if (charCode === 45 && input.length === 0) {
+        return true;
+    }
+
+    if (charCode === 46) { // If the character is "."
+        if (input.indexOf('.') !== -1) {
+            return false; // Only allow one decimal point
+        }
+    } else if (charCode !== 8 && (charCode < 48 || charCode > 57)) {
+        return false; // Only allow digits and backspace
+    }
+    return true;
+}
+
+
+// Allowing pasting from Excel
+document.getElementById("pastedDataBody").addEventListener("paste", function(event) {
+    // Stop the default paste action
+    event.stopPropagation();
+    event.preventDefault();
+
+    // Get the pasted data
+    var clipboardData = event.clipboardData || window.clipboardData;
+    var pastedData = clipboardData.getData('text');
+
+    // Split the pasted data into rows and cells
+    var rows = pastedData.split('\n');
+
+    // Check if the pasted data has more than 2 columns
+    if (rows.some(row => row.split('\t').length > 2)) {
+        alert("Pasting more than 2 columns is not allowed.");
+        return;
+    }
+
+    // Get the target cell where the paste was triggered
+    var targetCell = event.target;
+
+    // Find the index of the target row within the tbody
+    var targetRowIndex = Array.from(targetCell.parentElement.parentElement.children).indexOf(targetCell.parentElement);
+
+    // Find the index of the target cell within its row
+    var targetCellIndex = Array.from(targetCell.parentElement.children).indexOf(targetCell);
+
+    // Select all cells in the table body
+    var cells = document.querySelectorAll('#pastedDataBody td.pasteable');
+
+    // Loop through each cell and populate with pasted data
+    var rowIndex = targetRowIndex;
+    var columnIndex = targetCellIndex % 2; // Ensure columnIndex is either 0 or 1
+
+    for (var i = 0; i < rows.length; i++) {
+        if (rowIndex >= cells.length / 2) break; // Break if we reach the end of the table
+
+        var cellsData = rows[i].split('\t'); // Assuming tab-separated data
+
+        // Loop through each column of pasted data
+        for (var j = 0; j < Math.min(cellsData.length, 2); j++) {
+            // Populate cell with pasted data if the cell exists
+            var cell = cells[rowIndex * 2 + columnIndex]; // Multiply by 2 because there are 2 cells per row
+            if (cell) {
+                // Convert the pasted value to a specific format
+                cell.textContent = convertValue(cellsData[j].trim(), columnIndex);
+            }
+            columnIndex++;
+        }
+
+        rowIndex++;
+        columnIndex = targetCellIndex % 2; // Reset columnIndex for the next row
+    }
+});
+
+
+
+// Function to convert pasted value from () to -
+function convertValue(value, columnIndex) {
+    if (columnIndex === 1) { // Check if it's the second column
+        // Convert elements containing parentheses to dashes
+        return value.replace(/\(([^)]+)\)/g, '-$1');
+    }
+    // For other columns, return the original value
+    return value;
+}
+
+
+
+// Deleting P&L Data
+var deleteDataButton = document.getElementById("deleteDataButton");
+
+// Add click event listener to the delete data button
+deleteDataButton.addEventListener("click", function() {
+  // Select all cells with the class "pasteable"
+  var cells = document.querySelectorAll('.pasteable');
+
+  // Loop through each cell and clear its text content
+  cells.forEach(function(cell) {
+    cell.textContent = "";
+  });
+});
+
+
+
+
+// Function to limit cell value to be no higher than 100
+function max100(cell) {
+    if (cell.classList.contains('costBoxValue')) {
+        cell.addEventListener('input', function() {
+            // Get the entered value and convert it to a number
+            var enteredValue = parseFloat(cell.textContent.trim());
+
+            // Check if the entered value is greater than 100
+            if (!isNaN(enteredValue) && enteredValue > 100) {
+                // If the value is greater than 100, set it to 100
+                cell.textContent = '100';
+            }
+        });
+    }
+}
+
+// Apply the event listener to costBoxValue cells
+document.querySelectorAll('.costBoxValue').forEach(max100);
+
+
+
+
+// Function to handle checkbox change
+function handleCheckboxChange(checkbox) {
+    var costTypeElement = checkbox.parentElement.parentElement.querySelector('select[name="costType"]');
+    var costBoxValues = checkbox.parentElement.parentElement.querySelectorAll('.costBoxValue');
+    var validationElement = checkbox.parentElement.parentElement.querySelector('.validation');
+
+    if (checkbox.checked) {
+        // Show the costType dropdown if the checkbox is checked
+        costTypeElement.style.display = 'block';
+        // Set costBoxValue cells as contenteditable
+        costBoxValues.forEach(function(cell) {
+            cell.setAttribute('contenteditable', 'true');
+            // Set content of the validation element to 0
+            validationElement.textContent = '0';
+        });
+    } else {
+        // Hide the costType dropdown if the checkbox is unchecked
+        costTypeElement.style.display = 'none';
+        // Remove contenteditable attribute from costBoxValue cells
+        costBoxValues.forEach(function(cell) {
+            cell.removeAttribute('contenteditable');
+        });
+        // Clear text from costBoxValue cells in the parent row
+        checkbox.parentElement.parentElement.querySelectorAll('.costBoxValue').forEach(function(cell) {
+            cell.textContent = '';
+        });
+        // Clear content of the validation element
+        validationElement.textContent = '';
+    }
+}
+
+// Verify and handle checkboxes on page load
+document.addEventListener('DOMContentLoaded', function() {
+
+    var checkboxes = document.querySelectorAll('.main-checkbox');
+
+    checkboxes.forEach(function(checkbox) {
+        handleCheckboxChange(checkbox);
+        checkbox.addEventListener('change', function() {
+            handleCheckboxChange(this);
+        });
+    });
+
+    document.addEventListener('input', function(event) {
+        if (event.target.classList.contains('costBoxValue')) {
+            var parentRow = event.target.closest('tr');
+            updateValidationCell(parentRow);
+        }
+    });
+});
+
+
+
+// Making sure validation cells work well
+function updateValidationCell(row) {
+    // Find all costBoxValue cells in the row
+    var costBoxValueCells = row.querySelectorAll('.costBoxValue');
+
+    // Calculate the sum of values in costBoxValue cells
+    var sum = 0;
+    var allEmpty = true; // Flag to track if all cells are empty
+    costBoxValueCells.forEach(function(cell) {
+        var value = parseFloat(cell.textContent.trim());
+        if (!isNaN(value)) {
+            sum += value;
+            allEmpty = false; // At least one cell is not empty
+        }
+    });
+
+    // Update the validation cell
+    var validationCell = row.querySelector('.validation');
+    if (allEmpty) {
+        validationCell.textContent = '0'; // Display 0 if all cells are empty
+    } else if (sum == 0) {
+        validationCell.textContent = '0'; // Display empty string if sum is zero
+    } else if (sum == 100) {
+        validationCell.textContent = 'Ok';
+    } else {
+        validationCell.textContent = sum.toFixed(0); // Adjust decimal places as needed
+    }
+}
+
+
+// Add event listener to costBoxValue cells to trigger validation
+document.querySelectorAll('.costBoxValue').forEach(function(cell) {
+    cell.addEventListener('input', function() {
+        // Find the parent row of the changed cell
+        var parentRow = this.closest('tr');
+        updateValidationCell(parentRow);
+    });
+});
+
+// Trigger validation for each row where the checkbox is checked on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Find all main-checkbox elements
+    var checkboxes = document.querySelectorAll('.main-checkbox');
+
+    // Loop through each checkbox
+    checkboxes.forEach(function(checkbox) {
+        // Check if the checkbox is checked
+        if (checkbox.checked) {
+            // If checked, trigger validation for the corresponding row
+            var parentRow = checkbox.closest('tr');
+            updateValidationCell(parentRow);
+        }
+    });
+});
+
+
+
+
+// Add P&L Line
+document.getElementById("addNewLine").addEventListener("click", function() {
+    // Get the selected text
+    var selection = window.getSelection();
+    var selectedText = selection.toString().trim();
+
+    // Check if text is selected and it's within the 'pasteable' class
+    if (selectedText && selection.anchorNode.parentElement.classList.contains("pasteable")) {
+        // Find the parent row of the selected text
+        var selectedRow = selection.anchorNode.parentElement.closest("tr");
+
+        // Create a new row element
+        var newRow = document.createElement("tr");
+
+        // Insert HTML for the new row (you can adjust this based on your table structure)
+        newRow.innerHTML = `
+            <td class="pasteable" contenteditable="true"></td>
+                <td class="pasteable" contenteditable="true" onkeypress="return isFloat(event)"></td>
+                <td class="space"></td>
+                <td class="select"><input type="checkbox" class="main-checkbox"></td>
+                <td>
+                    <select name="costType" style="height: 25px; width: 100%; display: none;">
+                        <option value="" disabled selected style="text-align: center;">Select</option>
+                        <option value="Variable" style="text-align: center;">Variable</option>
+                        <option value="Fixed" style="text-align: center;">Fixed</option>
+                    </select>
+                </td>
+                <td class="space"></td>
+            ${getCostBoxCells()} <!-- This function call dynamically generates cost box cells -->
+            <td class="space"></td>
+            <td class="validation"></td>
+        `;
+
+        // Insert the new row just below the selected row
+        selectedRow.after(newRow);
+
+        // Add event listener to costBoxValue cells in the new row
+        var costBoxValueCellsInNewRow = newRow.querySelectorAll('.costBoxValue');
+        costBoxValueCellsInNewRow.forEach(max100); // Apply max100 event listener to the new cells
+
+        // Add event listeners to checkboxes in the new row
+        var checkboxesInNewRow = newRow.querySelectorAll("input[type='checkbox']");
+        checkboxesInNewRow.forEach(function(checkbox) {
+            checkbox.addEventListener("change", function() {
+                handleCheckboxChange(checkbox);
+                updateValidationCell(newRow); // Update validation cell for the newly created row
+
+                // Get the parent row of the checkbox
+                var parentRow = checkbox.parentElement.parentElement;
+
+                if (!checkbox.checked) {
+                    // Clear text from costBoxValue cells in the parent row
+                    parentRow.querySelectorAll('.costBoxValue').forEach(function(cell) {
+                        cell.textContent = '';
+                    });
+                    // Clear content of the validation element
+                    parentRow.querySelector('.validation').textContent = '';
+                }
+            });
+        });
+
+        // Add event listener to costBoxValue cells in the new row
+        var costBoxValueCellsInNewRow = newRow.querySelectorAll('.costBoxValue');
+        costBoxValueCellsInNewRow.forEach(function(cell) {
+            cell.addEventListener('input', function() {
+                updateValidationCell(newRow);
+            });
+        });
+
+
+    } else {
+        // If no text is selected or it's not within the 'pasteable' class, show an alert
+        alert("Please select text within P&L Data.");
+    }
+});
+
+function getCostBoxCells() {
+    var costBoxCells = '';
+    {% for costBox in unique_cost_boxes %}
+        costBoxCells += `<td class="costBoxValue" onkeypress="return isNumber(event)"></td>`;
+    {% endfor %}
+    return costBoxCells;
+}
+
+
+
+
+// Electricity calculator
+document.getElementById('elecCalculator').addEventListener('click', function() {
+    // Get the project ID and quarry ID from the hidden input fields
+    const projectId = document.getElementById('project_id').value;
+    const quarryId = document.getElementById('quarry_id').value;
+
+    // Construct the URL with path parameters
+    const url = `/Existing_Projects/Data_Portal/P4P_Portal/Electricity_calculator/${projectId}/${quarryId}/`;
+
+    // Open a new window with specified features
+    window.open(url, '_blank', 'width=1200,height=550');
+});
+
+
+// Add an event listener to the save button for the click event
+save.addEventListener('click', function() {
+
+
+    // Check if any select element has an invalid value
+    var checkboxes = document.querySelectorAll('.main-checkbox');
+    var costTypeSelection = true;
+    checkboxes.forEach(function(checkbox) {
+        // Check if the checkbox is checked
+        if (checkbox.checked) {
+            // Find the parent row of the checked checkbox
+            var parentRow = checkbox.closest('tr');
+            // Find the corresponding select element within the row
+            var selectElement = parentRow.querySelector('select[name="costType"]');
+            // Check if the select element has a valid value
+            if (selectElement && (selectElement.value !== "Variable" && selectElement.value !== "Fixed")) {
+                // If not, alert the user and return
+                costTypeSelection = false;
+                return;
+            }
+        }
+    });
+
+
+    var validationCells = document.querySelectorAll('.validation');
+    var okFound = false;
+    var allOk = true;
+
+    validationCells.forEach(function(cell) {
+        var content = cell.textContent.trim();
+        if (content === 'Ok') {
+            okFound = true;
+        } else if (content !== '') {
+            allOk = false;
+        }
+    });
+
+    if (!okFound || !allOk || !costTypeSelection) {
+        if (!costTypeSelection) {
+            alert("Please select cost type");
+        } else {
+            alert("Please distribute costs in cost boxes");
+        }
+    } else {
+        sendDataToBackend();
+    }
+});
+
+
+
+
+
+
+// Capture Data
+function captureTable() {
+    var table = document.getElementById('table');
+    var data = [['Cost_Label', 'Cost', 'Select', 'Cost_Type']];
+
+    // Get the unique cost boxes from the table header
+    var uniqueCostBoxes = [];
+    var costBoxHeaders = table.querySelectorAll('.costBox');
+    costBoxHeaders.forEach(function(header) {
+        uniqueCostBoxes.push(header.textContent.trim());
+    });
+
+    // Concatenate the unique cost boxes with the existing data array
+    data = [data[0].concat(uniqueCostBoxes)];
+
+
+    // Iterate over each row in the table body
+    var rows = table.querySelectorAll('tbody tr');
+    rows.forEach(function(row) {
+        var rowData = [];
+
+        // Extract data from cells with the class "pasteable"
+        var cells = row.querySelectorAll('.pasteable');
+        cells.forEach(function(cell) {
+            var cellData = cell.textContent.trim();
+            rowData.push(cellData);
+        });
+
+        // Extract data from cells with the class "main-checkbox"
+        var mainCheckbox = row.querySelector('.main-checkbox');
+        rowData.push(mainCheckbox.checked ? 'Checked' : 'Not Checked');
+
+        // Extract data from cells with the class "costType"
+        var costType = row.querySelector('select[name="costType"]');
+        var costTypeValue = costType.value;
+        rowData.push(costTypeValue);
+
+        // Extract data from cells with the class "costBoxValue"
+        var cells = row.querySelectorAll('.costBoxValue');
+        cells.forEach(function(cell) {
+            var cellData = cell.textContent.trim();
+            rowData.push(cellData);
+        });
+
+
+        // Push the rowData array to the data array
+        data.push(rowData);
+    });
+
+    return data;
+}
+
+
+
+function sendDataToBackend() {
+    // Show Loading Spinner
+    showLoadingSpinner();
+
+    // Call functions to get data
+    var data = captureTable();
+
+    // Stringify the data
+    var jsonData = JSON.stringify(data);
+
+    // Retrieve project_id and quarry_id
+    const project_id = document.getElementById('project_id').value.trim();
+    const quarry_id = document.getElementById('quarry_id').value.trim();
+
+    // Construct the URL
+    const url = `/Existing_Projects/Data_Portal/P4P_Portal/PL_allocation_bridge/${project_id}/${quarry_id}/`;
+
+    // Get CSRF token
+    const csrftoken = getCookie('csrftoken');
+
+    // Create a new XMLHttpRequest
+    const xhr = new XMLHttpRequest();
+
+    // Open the request
+    xhr.open('POST', url, true);
+
+    // Set request headers
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('X-CSRFToken', csrftoken);
+
+    // Define the onload function
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            console.log('Data successfully sent to the backend!');
+            // Redirect to Product list page
+            window.location.href = `/Existing_Projects/Data_Portal/P4P_Portal/P4P_Results/${project_id}/${quarry_id}/`;
+
+
+        } else {
+            console.error('Error:', xhr.status);
+
+        }
+    };
+
+
+    // Send the JSON data
+    xhr.send(jsonData);
+
+}
+
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+</script>
+
+
+{% endblock content %}

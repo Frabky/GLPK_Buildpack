@@ -1,0 +1,461 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+
+<title>B4C - Results</title>
+
+<h2>Balance for Cash - Results</h2>
+<h4>Project: {{ project_name }} {{ project_time_period }}</h4>
+<h4>Quarry: {{ quarry_name }}</h4>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+<button class="btn btn-outline-success" style="width: 250px;" id="downloadData">Download Results</button>
+<button class="btn btn-warning" style="width: 250px; margin-left: 20px;" id="backToPortal" onclick="redirectToPortal()">Go Back To B4C Portal</button>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th class="empty"></th>
+                <th colspan="7">Balance for Cash - Results Summary</th>
+            </tr>
+            <tr>
+                <th class="empty"></th>
+                <th style="vertical-align: middle;">Sales Volume [t]</th>
+                <th style="vertical-align: middle;">Min Stock Volume [t]</th>
+                <th style="vertical-align: middle;">Turnover [{{ currency }}]</th>
+                <th style="vertical-align: middle;">Variable Cost [{{ currency }}]</th>
+                <th style="vertical-align: middle;">Gross Margin [{{ currency }}]</th>
+                <th style="vertical-align: middle;">Opening Hours [h]</th>
+                <th style="vertical-align: middle;">Operating Hours [h]</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <th style="vertical-align: middle;">Meeting Sales Demand</th>
+                <td style="vertical-align: middle;">{{ sum_row_minVC_Base_Table.Sales_Volume }}</td>
+                <td style="vertical-align: middle;">{{ sum_row_minVC_Base_Table.Min_Stock }}</td>
+                <td style="vertical-align: middle;">{{ sum_row_minVC_Base_Table.Turnover }}</td>
+                <td style="vertical-align: middle;">{{ sum_row_minVC_Base_Table.Variable_Cost }}</td>
+                <td style="vertical-align: middle;">{{ sum_row_minVC_Base_Table.Gross_Margin }}</td>
+                <td style="vertical-align: middle;">{{ minVC_sum_row_modes_Hours_df.Opening_Hours }}</td>
+                <td style="vertical-align: middle;">{{ minVC_sum_row_modes_Hours_df.Operating_Hours }}</td>
+            </tr>
+            <tr>
+                <th style="vertical-align: middle;">Maximizing Gross Margin</th>
+                <td style="vertical-align: middle;">{{ sum_row_maxGM_Base_Table.Sales_Volume }}</td>
+                <td style="vertical-align: middle;">{{ sum_row_maxGM_Base_Table.Min_Stock }}</td>
+                <td style="vertical-align: middle;">{{ sum_row_maxGM_Base_Table.Turnover }}</td>
+                <td style="vertical-align: middle;">{{ sum_row_maxGM_Base_Table.Variable_Cost }}</td>
+                <td style="vertical-align: middle;">{{ sum_row_maxGM_Base_Table.Gross_Margin }}</td>
+                <td style="vertical-align: middle;">{{ maxGM_sum_row_modes_Hours_df.Opening_Hours }}</td>
+                <td style="vertical-align: middle;">{{ maxGM_sum_row_modes_Hours_df.Operating_Hours }}</td>
+            </tr>
+            <tr>
+                <th style="vertical-align: middle;">Delta</th>
+                <th style="vertical-align: middle;">{{ delta_row_minVC_maxGM.Sales_Volume }}</th>
+                <th style="vertical-align: middle;">{{ delta_row_minVC_maxGM.Min_Stock }}</th>
+                <th style="vertical-align: middle;">{{ delta_row_minVC_maxGM.Turnover }}</th>
+                <th style="vertical-align: middle;">{{ delta_row_minVC_maxGM.Variable_Cost }}</th>
+                <th style="vertical-align: middle;">{{ delta_row_minVC_maxGM.Gross_Margin }}</th>
+                <th style="vertical-align: middle;">{{ sum_opening_hours }}</th>
+                <th style="vertical-align: middle;">{{ sum_operating_hours }}</th>
+            </tr>
+        </tbody>
+    </table>
+
+
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th colspan="8">Meeting Sales Demand - Profitability Overview</th>
+            </tr>
+            <tr>
+                <th style="vertical-align: middle;">Product</th>
+                <th style="vertical-align: middle;">Sales Volume [t]</th>
+                <th style="vertical-align: middle;">Min Stock Volume [t]</th>
+                <th style="vertical-align: middle;">Av. Sales Price [{{ currency }}/t]</th>
+                <th style="vertical-align: middle;">Turnover [{{ currency }}]</th>
+                <th style="vertical-align: middle;">Variable Cost [{{ currency }}/t]</th>
+                <th style="vertical-align: middle;">Variable Cost [{{ currency }}]</th>
+                <th style="vertical-align: middle;">Gross Margin [{{ currency }}]</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for index, row in minVC_Base_Table_df.iterrows %}
+            <tr>
+                <td style="vertical-align: middle;">{{ row.Product }}</td>
+                <td style="vertical-align: middle;">{{ row.Sales_Volume }}</td>
+                <td style="vertical-align: middle;">{{ row.Min_Stock }}</td>
+                <td style="vertical-align: middle;">{{ row.ASP }}</td>
+                <td style="vertical-align: middle;">{{ row.Turnover }}</td>
+                <td style="vertical-align: middle;">{{ row.Variable_Cost_per_t }}</td>
+                <td style="vertical-align: middle;">{{ row.Variable_Cost }}</td>
+                <td style="vertical-align: middle;">{{ row.Gross_Margin }}</td>
+            </tr>
+            {% endfor %}
+            <tr>
+                <th style="vertical-align: middle;">Total</th>
+                <th style="vertical-align: middle;">{{ sum_row_minVC_Base_Table.Sales_Volume }}</th>
+                <th style="vertical-align: middle;">{{ sum_row_minVC_Base_Table.Min_Stock }}</th>
+                <th class="empty"></th>
+                <th style="vertical-align: middle;">{{ sum_row_minVC_Base_Table.Turnover }}</th>
+                <th class="empty"></th>
+                <th style="vertical-align: middle;">{{ sum_row_minVC_Base_Table.Variable_Cost }}</th>
+                <th style="vertical-align: middle;">{{ sum_row_minVC_Base_Table.Gross_Margin }}</th>
+            </tr>
+        </tbody>
+    </table>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+<div class="table-container" style="max-width: 1000px;">
+    <table class="table">
+        <thead>
+            <tr>
+                <th colspan="5">Meeting Sales Demand - Optimised Production Profile</th>
+            </tr>
+            <tr>
+                <th style="vertical-align: middle;">Mode</th>
+                <th style="vertical-align: middle;">Opening Hours [h]</th>
+                <th style="vertical-align: middle;">Operating Hours [h]</th>
+                <th style="vertical-align: middle;">Max Capacity [t/h]</th>
+                <th style="vertical-align: middle;">Coefficient [-]</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for index, row in minVC_modes_Hours_df.iterrows %}
+            <tr>
+                <td style="vertical-align: middle;">{{ row.Modes }}</td>
+                <td style="vertical-align: middle;">{{ row.Opening_Hours }}</td>
+                <td style="vertical-align: middle;">{{ row.Operating_Hours }}</td>
+                <td style="vertical-align: middle;">{{ row.Max_capacity }}</td>
+                <td style="vertical-align: middle;">{{ row.Coefficient }}</td>
+            </tr>
+            {% endfor %}
+            <tr>
+                <th style="vertical-align: middle;">Total</th>
+                <th style="vertical-align: middle;">{{ minVC_sum_row_modes_Hours_df.Opening_Hours }}</th>
+                <th style="vertical-align: middle;">{{ minVC_sum_row_modes_Hours_df.Operating_Hours }}</th>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+
+
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th colspan="8">Maximizing Gross Margin - Profitability Overview</th>
+            </tr>
+            <tr>
+                <th style="vertical-align: middle;">Product</th>
+                <th style="vertical-align: middle;">Sales Volume [t]</th>
+                <th style="vertical-align: middle;">Min Stock Volume [t]</th>
+                <th style="vertical-align: middle;">Av. Sales Price [{{ currency }}/t]</th>
+                <th style="vertical-align: middle;">Turnover [{{ currency }}]</th>
+                <th style="vertical-align: middle;">Variable Cost [{{ currency }}/t]</th>
+                <th style="vertical-align: middle;">Variable Cost [{{ currency }}]</th>
+                <th style="vertical-align: middle;">Gross Margin [{{ currency }}]</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for index, row in maxGM_Base_Table_df.iterrows %}
+            <tr>
+                <td style="vertical-align: middle;">{{ row.Product }}</td>
+                <td style="vertical-align: middle;">{{ row.Sales_Volume }}</td>
+                <td style="vertical-align: middle;">{{ row.Min_Stock }}</td>
+                <td style="vertical-align: middle;">{{ row.ASP }}</td>
+                <td style="vertical-align: middle;">{{ row.Turnover }}</td>
+                <td style="vertical-align: middle;">{{ row.Variable_Cost_per_t }}</td>
+                <td style="vertical-align: middle;">{{ row.Variable_Cost }}</td>
+                <td style="vertical-align: middle;">{{ row.Gross_Margin }}</td>
+            </tr>
+            {% endfor %}
+            <tr>
+                <th style="vertical-align: middle;">Total</th>
+                <th style="vertical-align: middle;">{{ sum_row_maxGM_Base_Table.Sales_Volume }}</th>
+                <th style="vertical-align: middle;">{{ sum_row_maxGM_Base_Table.Min_Stock }}</th>
+                <th class="empty"></th>
+                <th style="vertical-align: middle;">{{ sum_row_maxGM_Base_Table.Turnover }}</th>
+                <th class="empty"></th>
+                <th style="vertical-align: middle;">{{ sum_row_maxGM_Base_Table.Variable_Cost }}</th>
+                <th style="vertical-align: middle;">{{ sum_row_maxGM_Base_Table.Gross_Margin }}</th>
+            </tr>
+        </tbody>
+    </table>
+
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+<div class="table-container" style="max-width: 1000px;">
+    <table class="table">
+        <thead>
+            <tr>
+                <th colspan="5">Maximizing Gross Margin - Optimised Production Profile</th>
+            </tr>
+            <tr>
+                <th style="vertical-align: middle;">Mode</th>
+                <th style="vertical-align: middle;">Opening Hours [h]</th>
+                <th style="vertical-align: middle;">Operating Hours [h]</th>
+                <th style="vertical-align: middle;">Max Capacity [t/h]</th>
+                <th style="vertical-align: middle;">Coefficient [-]</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for index, row in maxGM_modes_Hours_df.iterrows %}
+            <tr>
+                <td style="vertical-align: middle;">{{ row.Modes }}</td>
+                <td style="vertical-align: middle;">{{ row.Opening_Hours }}</td>
+                <td style="vertical-align: middle;">{{ row.Operating_Hours }}</td>
+                <td style="vertical-align: middle;">{{ row.Max_capacity }}</td>
+                <td style="vertical-align: middle;">{{ row.Coefficient }}</td>
+            </tr>
+            {% endfor %}
+            <tr>
+                <th style="vertical-align: middle;">Total</th>
+                <th style="vertical-align: middle;">{{ maxGM_sum_row_modes_Hours_df.Opening_Hours }}</th>
+                <th style="vertical-align: middle;">{{ maxGM_sum_row_modes_Hours_df.Operating_Hours }}</th>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+
+<table class="table">
+    <thead>
+        <tr>
+            <th colspan="9">Maximizing Gross Margin - Volume Difference per Customer vs Sales Demand</th>
+        </tr>
+        <tr>
+            <th style="vertical-align: middle;">Customers</th>
+            <th style="vertical-align: middle;">Product</th>
+            <th style="vertical-align: middle;">Sales Price [{{ currency }}/t]</th>
+            <th style="vertical-align: middle;">Gross Margin [{{ currency }}/t]</th>
+            <th style="vertical-align: middle;">Sales Demand [t]</th>
+            <th style="vertical-align: middle;">Sales Volume [t]</th>
+            <th style="vertical-align: middle;">Sales Delta [t]</th>
+            <th style="vertical-align: middle;">Margin Impact [{{ currency }}]</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for index, row in minVC_maxGM_difference_df.iterrows %}
+        <tr>
+            <td style="vertical-align: middle;">{{ row.Customers }}</td>
+            <td style="vertical-align: middle;">{{ row.Product }}</td>
+            <td style="vertical-align: middle;">{{ row.ASP }}</td>
+            <td style="vertical-align: middle;">{{ row.Gross_Margin_per_t }}</td>
+            <td style="vertical-align: middle;">{{ row.Sales_Volume_minVC }}</td>
+            <td style="vertical-align: middle;">{{ row.Sales_Volume_maxGM }}</td>
+            <td style="vertical-align: middle;">{{ row.Sales_Volume_Delta }}</td>
+            <td style="vertical-align: middle;" class="GM-delta">{{ row.Gross_Margin_Delta }}</td>
+        </tr>
+        {% endfor %}
+        <tr>
+            <th colspan="7">Total Gross Margin Impact vs Sales Demand</th>
+            <th id="total-GM-sales"></th>
+        </tr>
+    </tbody>
+</table>
+
+
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+
+    <input type="hidden" id="project_id" value="{{ project_id }}">
+    <input type="hidden" id="quarry_id" value="{{ quarry_id }}">
+    <div class="download-data_maxGM" data-download="{{ maxGM_Base_Table_df_Downaload }}"></div>
+    <div class="download-data_minVC" data-download="{{ minVC_Base_Table_df_Downaload }}"></div>
+    <div class="download-data_salesDelta" data-download="{{ minVC_maxGM_difference_df_Download }}"></div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+
+
+
+<script>
+
+    function redirectToPortal() {
+        // Retrieve project_id and quarry_id values
+        var project_id = document.getElementById("project_id").value;
+        var quarry_id = document.getElementById("quarry_id").value;
+
+        // Construct the URL
+        var url = `/Existing_Projects/Data_Portal/B4C_Portal/${project_id}/`;
+
+        // Navigate to the URL
+        window.location.href = url;
+    }
+
+    var quarry_name = '{{ quarry_name }}';
+    var project_time_period = '{{ project_time_period }}';
+
+    // Function to calculate total gross margin impact on sales
+    function calculateTotalGMDelta() {
+        var total = 0;
+        // Select all elements with class "GM-delta"
+        var GMdeltaElements = document.querySelectorAll('.GM-delta');
+        GMdeltaElements.forEach(function(element) {
+            // Remove commas and parse the content of each element before adding to total
+            var delta = element.textContent.replace(/,/g, ''); // Remove commas
+            total += parseFloat(delta);
+        });
+        // Format the total using 'en-US' locale with grouping
+        var formattedTotal = total.toLocaleString('en-US', {useGrouping: true});
+        // Update the total in the designated <td> element
+        document.getElementById('total-GM-sales').textContent = formattedTotal;
+    }
+
+    // Call the function to calculate total gross margin impact on sales initially
+    calculateTotalGMDelta();
+
+
+    document.getElementById('downloadData').addEventListener('click', function() {
+        // Function to convert array buffer to binary string
+        function s2ab(s) {
+            var buf = new ArrayBuffer(s.length);
+            var view = new Uint8Array(buf);
+            for (var i = 0; i != s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
+            return buf;
+        }
+
+        // Function to download Excel file
+        function downloadExcel(data, filename) {
+            var wb = XLSX.utils.book_new();
+
+            data.forEach(function(item, index) {
+                // Custom sheet names
+                var sheetName;
+                switch(index) {
+                    case 0:
+                        sheetName = 'Meet Sales Demand';
+                        break;
+                    case 1:
+                        sheetName = 'Max Gross Margin';
+                        break;
+                    case 2:
+                        sheetName = 'Sales Volume Delta';
+                        break;
+                    default:
+                        sheetName = 'Sheet' + (index + 1);
+                }
+
+                var arrayData = [item.columns].concat(item.data);
+                var ws = XLSX.utils.aoa_to_sheet(arrayData);
+                XLSX.utils.book_append_sheet(wb, ws, sheetName);
+            });
+
+            // Generate a binary string from the XLSX file
+            var wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+
+            // Create a blob and download link
+            var blob = new Blob([s2ab(wbout)], { type: 'application/octet-stream' });
+            var url = window.URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            document.body.appendChild(a);
+            a.style = 'display: none';
+            a.href = url;
+            a.download = filename;
+            a.click();
+
+            // Clean up
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Get data from data attributes
+        var minVC_data = document.querySelector('.download-data_minVC').dataset.download;
+        var maxGM_data = document.querySelector('.download-data_maxGM').dataset.download;
+        var salesDelta_data = document.querySelector('.download-data_salesDelta').dataset.download;
+
+        // Ensure that data is not empty
+        if (!maxGM_data || !minVC_data || !salesDelta_data) {
+            console.error("No data to download.");
+            return;
+        }
+
+        // Convert JSON to array of objects
+        var minVC_df = JSON.parse(minVC_data);
+        var maxGM_df = JSON.parse(maxGM_data);
+        var salesDelta_df = JSON.parse(salesDelta_data);
+
+        // Define data to download
+        var dataToDownload = [
+            { data: minVC_df.data, columns: minVC_df.columns },
+            { data: maxGM_df.data, columns: maxGM_df.columns },
+            { data: salesDelta_df.data, columns: salesDelta_df.columns }
+        ];
+
+        // Download Excel file
+        var filename = 'B4C_' + quarry_name + '_' + project_time_period + '_Sales_Details.xlsx';
+        downloadExcel(dataToDownload, filename);
+    });
+</script>
+
+{% endblock content %}

@@ -1,0 +1,84 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+
+<title>Quarry IQ - FarSeer Forecast Portal</title>
+
+<h2>Quarry IQ - FarSeer Forecast Portal</h2>
+<h4>Project: {{ project_name }} {{ project_time_period }}</h4>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+<div class="table-container" style="max-width: 1500px;">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Quarry</th>
+                {% if is_editor %}
+                <th>Edition</th>
+                {% endif %}
+                <th>Results</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for index, row in FarSeer_empty_df.iterrows %}
+            <tr>
+                <td>{{ row.Quarry }}</td>
+
+                {% if not row.Condition_B4C and not row.clusterToBox_change %}
+                    {% if is_editor %}
+                <td>
+                    <form action="{% url 'FarSeer_Information' project_id=project_data.project_id quarry_id=row.Quarry_ID %}" method="get">
+                        <button class="btn btn-outline-dark" style="width: 250px;" type="submit">Edit</button>
+                    </form>
+                </td>
+                    {% endif %}
+                {% else %}
+                    {% if is_editor %}
+                <td></td>
+                    {% endif %}
+                {% endif %}
+
+                {% if not row.Condition_FarSeer and not row.clusterToBox_change %}
+                <td>
+                    <form action="{% url 'FarSeer_Results_Summary' project_id=project_data.project_id quarry_id=row.Quarry_ID %}" method="get" onsubmit="showLoadingSpinner()">
+                        <button class='btn btn-warning' style="width: 250px;" type="submit">Results</button>
+                    </form>
+                </td>
+                    {% if is_editor %}
+                <td>
+                    <form action="{% url 'FarSeer_Clear_Data' project_id=project_data.project_id quarry_id=row.Quarry_ID %}" method="get">
+                        <button id="clearDataButton" class='btn btn-outline-danger' style="width: 250px;" type="submit">Delete Forecast</button>
+                    </form>
+                </td>
+                    {% endif %}
+                {% else %}
+                <td></td>
+                    {% if is_editor %}
+                <td></td>
+                    {% endif %}
+                {% endif %}
+
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+<script>
+    document.getElementById("clearDataButton").addEventListener("click", function(event) {
+        // Show confirmation dialog
+        var confirmClear = confirm("Are you sure you want to clear the data?");
+        if (!confirmClear) {
+            // If user cancels, prevent form submission
+            event.preventDefault();
+        }
+    });
+</script>
+
+{% endblock content %}

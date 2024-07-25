@@ -1,0 +1,88 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+
+<title>Sagitta Nova - User Profile</title>
+
+<h2>User Profile</h2>
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+<div class="table-container" style="max-width: 1200px;">
+    <form method="post">
+        {% csrf_token %}
+        <table class="table">
+            <tr style="height: 60px;">
+                <th class="empty"></th>
+                <th style="vertical-align: middle; width: 400px;">Information</th>
+            </tr>
+            <tr style="height: 60px;">
+                <th style="vertical-align: middle; width: 400px;">Email</th>
+                <td style="vertical-align: middle; width: 400px;">{{ user_email }}</td>
+            </tr>
+            <tr style="height: 60px;">
+                <th style="vertical-align: middle; width: 400px;">First Name</th>
+                <td style="vertical-align: middle; width: 400px;">{{ user_first_name }}</td>
+            </tr>
+            <tr style="height: 60px;">
+                <th style="vertical-align: middle; width: 400px;">Last Name</th>
+                <td style="vertical-align: middle; width: 400px;">{{ user_last_name }}</td>
+            </tr>
+            <tr style="height: 60px;">
+                <th style="vertical-align: middle; width: 400px;">Current Password</th>
+                <td style="vertical-align: middle; width: 400px;">
+                    <input type="password" name="old_password" class="form-control" required
+                       onfocus="this.placeholder = ''" onblur="this.placeholder = 'Current Password'"
+                       placeholder="Current Password" style="text-align: center;">
+                </td>
+            </tr>
+            <tr style="height: 60px;">
+                <th style="vertical-align: middle; width: 400px;">New Password</th>
+                <td style="vertical-align: middle; width: 400px;">
+                    <input type="password" name="new_password1" class="form-control" required
+                       onfocus="this.placeholder = ''" onblur="this.placeholder = 'New Password'"
+                       placeholder="New Password" style="text-align: center;">
+                </td>
+            </tr>
+            <tr style="height: 60px;">
+                <th style="vertical-align: middle; width: 400px;">Confirm New Password</th>
+                <td style="vertical-align: middle; width: 400px;">
+                    <input type="password" name="new_password2" class="form-control" required
+                       onfocus="this.placeholder = ''" onblur="this.placeholder = 'Confirm New Password'"
+                       placeholder="Confirm New Password" style="text-align: center;">
+                </td>
+            </tr>
+            <tr><td class="empty"></td></tr>
+            <tr style="height: 60px;">
+                <td class="empty">
+                    <button style="width: 250px;" id="save" class='btn btn-outline-success'>Save</button>
+                </td>
+            </tr>
+            <tr><td class="empty"></td></tr>
+            <tr><td class="empty"></td></tr>
+        </table>
+    </form>
+</div>
+
+
+{% if error_message %}
+<div class="table-container" style="max-width: 1200px;">
+    <div class="alert alert-danger">
+        <strong>Error:</strong> {{ error_message | safe }}
+    </div>
+</div>
+{% endif %}
+
+{% if success_message %}
+<div class="table-container" style="max-width: 1200px;">
+    <div class="alert alert-success">
+        <strong>Success:</strong> {{ success_message }}
+    </div>
+</div>
+{% endif %}
+
+{% endblock content %}

@@ -1,0 +1,51 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+    <title>Quarry IQ - Heatmap Portal</title>
+
+    <h2>Quarry IQ - Heatmap Portal</h2>
+    <h4>Project: {{ project_name }} {{ project_time_period }}</h4>
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+<div class="table-container" style="max-width: 700px;">
+<table class="table">
+    <thead>
+        <tr>
+            <th>Product Group</th>
+            <th>Volume [t]</th>
+            <th>Volume Proportion [-]</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for index, row in product_group_sales_df.iterrows %}
+        <tr>
+            <td>
+                <form action="{% url 'Heatmap_product_group' project_id=project_id product_group=row.Product_Group %}" method="get" target="_blank">
+                    <button style="width: 250px;" class='btn btn-outline-dark' type="submit">{{ row.Product_Group }}</button>
+                </form>
+            </td>
+            <td style="vertical-align: middle;">{{ row.Sales_Volume }}</td>
+            <td style="vertical-align: middle;">{{ row.Percentage }}%</td>
+        </tr>
+        {% endfor %}
+        <tr>
+            <th>
+                <form action="{% url 'Heatmap_all_product_groups' project_id=project_id %}" method="get" target="_blank">
+                    <button style="width: 250px;" class='btn btn-outline-dark' type="submit">All Product Groups</button>
+                </form>
+            </th>
+            <th style="vertical-align: middle;">{{ total_volume }}</th>
+            <th style="vertical-align: middle;">100%</th>
+        </tr>
+    </tbody>
+</table>
+</div>
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+{% endblock content %}

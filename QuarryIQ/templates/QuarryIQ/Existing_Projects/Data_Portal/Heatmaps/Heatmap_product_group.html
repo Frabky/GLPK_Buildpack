@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Heatmap - {{ product_group }}</title>
+
+</head>
+<body>
+    <h3>{{ product_group }}</h3>
+    {% with heatmap_file=template_folder|add:'/Heatmap_'|add:product_group|add:'.html' %}
+        {% include heatmap_file %}
+    {% endwith %}
+
+</body>
+</html>

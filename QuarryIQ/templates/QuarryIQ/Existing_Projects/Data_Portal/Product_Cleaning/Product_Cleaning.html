@@ -1,0 +1,756 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+
+<title>Quarry IQ - Product Cleaning</title>
+
+<style>
+    #productsTable td {
+        vertical-align: middle;
+    }
+    #productsTable th {
+        vertical-align: middle;
+    }
+    #copiedProductsTable td {
+        vertical-align: middle;
+    }
+    #copiedProductsTable th {
+        vertical-align: middle;
+    }
+</style>
+
+
+<h2>Quarry IQ - Product Cleaning</h2>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+
+
+<div id="contentContainer">
+
+    <div class="flex-container" id="formWrapper">
+        <form id="uploadForm" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <table>
+                <tr>
+                    <td style="vertical-align: middle;">
+                        <div class="form-group">
+                            <!-- Hide the default file input -->
+                            <input type="file" class="form-control-file" id="fileInput" name="file" style="display: none;">
+                            <!-- Use a label with a custom button style to trigger the file input -->
+                            <label for="fileInput" class="btn btn-outline-dark" style="width: 250px;">
+                                Choose File
+                            </label>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: middle;">
+                        <button type="submit" class="btn btn-outline-success" style="width: 250px;">Upload</button>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+
+<div class="flex-container" id="buttonWrapper" style="display: none;">
+    <button class="btn btn-outline-dark" style="width: 250px;" id="mergeButton">Rename / Merge</button>
+    <button class="btn btn-outline-dark" style="width: 250px; margin-left: 20px;" id="removeButton">Remove</button>
+    <button class="btn btn-outline-dark" style="width: 250px; margin-left: 20px;" id="undoButton">Undo</button>
+    <button class="btn btn-warning" style="width: 250px; margin-left: 20px;" id="finishButton">Next</button>
+    <button class="btn btn-warning" style="width: 250px; display: none;" id="finishAndExportButton">Save</button>
+</div>
+
+
+<div class="flex-container" id="blankWrapper" style="display: none;">
+    <table>
+        <tr><th class="empty"></th><th class="empty"></th></tr>
+        <tr><th class="empty"></th><th class="empty"></th></tr>
+        <tr><th class="empty"></th><th class="empty"></th></tr>
+        <tr><th class="empty"></th><th class="empty"></th></tr>
+    </table>
+
+</div>
+
+
+    <div class="flex-container" id="containerWrapper" style="display: none; width: 100%;">
+
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-6" id="productsTableContainer">
+                    <table class="table" id="productsTable"></table>
+                </div>
+                <div class="col-md-6" id="copiedProductsTableContainer">
+                    <table class="table" id="copiedProductsTable"></table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+<input type="hidden" id="project_id" value="{{ project_id }}">
+
+
+<script>
+
+// JavaScript to update the text of the "Choose File" button with the selected file name
+const fileInput = document.getElementById('fileInput');
+const chooseFileButton = document.querySelector('label[for="fileInput"]');
+
+fileInput.addEventListener('change', function() {
+    if (fileInput.files.length > 0) {
+        const fileName = fileInput.files[0].name;
+        chooseFileButton.textContent = fileName;
+    } else {
+        chooseFileButton.textContent = 'Choose File';
+    }
+});
+
+// === CONTAINER WRAPPER ===
+const uploadForm = document.getElementById('uploadForm');
+const containerWrapper = document.getElementById('containerWrapper');
+const buttonWrapper = document.getElementById('buttonWrapper');
+const blankWrapper = document.getElementById('blankWrapper');
+const formWrapper = document.getElementById('formWrapper');
+
+
+// Event listener for form submission (file upload)
+uploadForm.addEventListener('submit', function(event) {
+    event.preventDefault(); // Prevent default form submission
+});
+
+function showDataFrames() {
+    containerWrapper.style.display = 'flex';
+    buttonWrapper.style.display = 'flex';
+    blankWrapper.style.display = 'flex';
+    formWrapper.style.display = 'none';
+}
+// +++++
+
+
+
+
+// === RENDERING OF ORIGINAL DATAFRAME ===
+function renderDataFrame(products) {
+    const container = document.getElementById('productsTable');
+    container.innerHTML = '';
+
+    if (products && products.length > 0) {
+
+        // Exclude 'HiddenColumn' and 'Product Group' columns from display
+        const columns = Object.keys(products[0]).filter(col => col !== 'HiddenColumn' && col !== 'Product Group');
+
+        // Ensure 'Modification' column always exists in the columns list
+        if (!columns.includes('Modification')) {
+            columns.push('Modification');
+        }
+
+        // Create super header row
+        const superHeaderRow = document.createElement('tr');
+        const superHeaderCell = document.createElement('th');
+        superHeaderCell.textContent = 'Original Product List';
+        superHeaderCell.colSpan = 3; // Set colspan to span across 3 columns
+        superHeaderRow.appendChild(superHeaderCell);
+        container.appendChild(superHeaderRow);
+
+        // Create table headers
+        const headerRow = document.createElement('tr');
+        columns.forEach(col => {
+            const th = document.createElement('th');
+            // Display 'Sales_Volume' as 'Sales Volume [t]' in the table header
+            if (col === 'Sales_Volume') {
+                th.textContent = 'Sales Volume [t]';
+            } else {
+                th.textContent = col;
+            }
+            headerRow.appendChild(th);
+        });
+
+        container.appendChild(headerRow);
+
+        // Render rows
+        products.forEach(rowData => {
+            const row = document.createElement('tr');
+            columns.forEach(col => {
+                const td = document.createElement('td');
+                td.textContent = rowData[col] || '';
+                // Add CSS class to center the data in the 'Sales_Volume' column
+                if (col === 'Sales_Volume' || col === 'Modification') {
+                    td.classList.add('centered-column');
+                }
+                row.appendChild(td);
+            });
+
+            container.appendChild(row);
+        });
+    } else {
+        const noDataMessage = document.createElement('tr');
+        const td = document.createElement('td');
+        td.textContent = 'No DataFrame available or DataFrame is empty';
+        td.colSpan = 1;
+        noDataMessage.appendChild(td);
+        container.appendChild(noDataMessage);
+    }
+}
+
+
+// +++++
+
+
+
+
+// === RENDERING OF COPIED DATAFRAME ===
+function renderCopiedDataFrame(products) {
+    const container = document.getElementById('copiedProductsTable');
+    container.innerHTML = '';
+
+    if (products && products.length > 0) {
+
+        // Define column names and their corresponding widths
+        const columnsWidths = {
+            'Select': '80px',
+        };
+
+        // Exclude 'Modification' and 'HiddenColumn' columns from display
+        const columns = Object.keys(products[0]).filter(col => col !== 'Modification' && col !== 'HiddenColumn');
+
+        // Sort the products by 'Sales_Volume' column in descending order
+        products.sort((a, b) => b.Sales_Volume - a.Sales_Volume);
+
+        // Create super header row
+        const superHeaderRow = document.createElement('tr');
+        const superHeaderCell = document.createElement('th');
+        superHeaderCell.textContent = 'Modified Product List';
+        superHeaderCell.colSpan = 3; // Set colspan to span across 3 columns
+        superHeaderRow.appendChild(superHeaderCell);
+        container.appendChild(superHeaderRow);
+
+        const headerRow = document.createElement('tr');
+
+        // Adding an empty th for the selection column
+        const selectionHeader = document.createElement('th');
+        selectionHeader.textContent = 'Select';
+        headerRow.appendChild(selectionHeader);
+
+        columns.forEach(col => {
+            const th = document.createElement('th'); // Create th before setting its width
+
+            // Set width for the column if specified
+            if (columnsWidths[col]) {
+                th.style.width = columnsWidths[col];
+            }
+
+            // Render 'Sales_Volume' header as 'Sales Volume [t]'
+            if (col === 'Sales_Volume') {
+                th.textContent = 'Sales Volume [t]';
+            } else {
+                th.textContent = col;
+            }
+            headerRow.appendChild(th);
+        });
+
+        container.appendChild(headerRow);
+
+        products.forEach((rowData, rowIndex) => {
+            const row = document.createElement('tr');
+
+            // Create checkboxes for each row
+            const checkboxCell = document.createElement('td');
+            checkboxCell.style.textAlign = 'center'; // Center the contents of the cell
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.dataset.rowIndex = rowIndex; // Store row index for reference
+            checkboxCell.appendChild(checkbox);
+            row.appendChild(checkboxCell);
+
+            columns.forEach(col => {
+                const td = document.createElement('td');
+                td.textContent = rowData[col] || '';
+                // Add CSS class to center the data in the 'Sales_Volume' column
+                if (col === 'Sales_Volume') {
+                    td.classList.add('centered-column');
+                }
+                row.appendChild(td);
+            });
+
+            container.appendChild(row);
+        });
+    } else {
+        const noDataMessage = document.createElement('tr');
+        const td = document.createElement('td');
+        td.textContent = 'No DataFrame available or DataFrame is empty';
+        td.colSpan = 1;
+        noDataMessage.appendChild(td);
+        container.appendChild(noDataMessage);
+    }
+}
+// +++++
+
+
+
+
+// === REMOVE FUNCTION ===
+function removeSelectedRows() {
+    const checkboxes = document.querySelectorAll('#copiedProductsTable input[type="checkbox"]:checked');
+    const indicesToRemove = Array.from(checkboxes).map(checkbox => parseInt(checkbox.dataset.rowIndex));
+
+    if (indicesToRemove.length < 1) {
+        alert('Please select at least one row.');
+        return;
+    }
+
+    // Store the rows being removed temporarily
+    const removedData = [];
+    indicesToRemove.forEach(index => {
+        if (copiedProducts[index]) {
+            removedData.push(copiedProducts[index]);
+            const productName = copiedProducts[index]['Product'];
+            copiedProducts[index]['Modification'] = 'Removed';
+
+            // Lines to handle "Removed" note for single products when a merged product is deleted
+            originalProducts.forEach(originalRow => {
+                if (originalRow['Modification'] && originalRow['Modification'].includes(productName)) {
+                    originalRow['Modification'] = 'Removed';
+                }
+            });
+        }
+    });
+
+    // Store removed indices and data to history
+    saveRemoveToHistory(indicesToRemove, removedData);
+
+    // Create a new array excluding the selected rows
+    const modifiedCopiedProducts = copiedProducts.filter((_, index) => !indicesToRemove.includes(index));
+
+    // Replace the original copiedProducts array with the modified copy
+    copiedProducts = modifiedCopiedProducts;
+
+    // Render the updated copied and original data frames
+    renderCopiedDataFrame(copiedProducts);
+    renderDataFrame(originalProducts);
+}
+//+++++
+
+
+
+
+// === RENAME / MERGE FUNCTION ===
+let newName = '';
+
+function mergeOrRenameSelectedRows() {
+    const checkboxes = document.querySelectorAll('#copiedProductsTable input[type="checkbox"]:checked');
+    const indicesToMerge = Array.from(checkboxes).map(checkbox => parseInt(checkbox.dataset.rowIndex));
+
+    if (indicesToMerge.length < 1) {
+        alert('Please select at least one row.');
+        return;
+    }
+
+    const newName = prompt('Enter your new product name:');
+    if (!newName) {
+        return; // Exit if the user cancels or enters an empty name
+    }
+
+    const productsToMerge = indicesToMerge.map(index => copiedProducts[index].Product);
+
+    // Check if newName already exists in copiedProducts
+    const newNameExists = copiedProducts.some(product => product.Product === newName);
+    const newNameIsSelected = copiedProducts[indicesToMerge[0]].Product === newName;
+    const alreadyMergedSelected = productsToMerge.some(product => product === newName);
+
+    if (newNameExists && !newNameIsSelected && !alreadyMergedSelected) {
+        alert('Product name already existing. Please include it in your selection.');
+        return;
+    }
+
+    // Update originalProducts Modification column based on newName
+    originalProducts.forEach(row => {
+        if (productsToMerge.includes(row.Product)) {
+            row.Modification = `Renamed as ${newName}`;
+        }
+    });
+
+    // Update originalProducts Modification column based on already merged products with newName
+    originalProducts.forEach(row => {
+        const modifiedProductName = row.Modification && row.Modification.split('Renamed as ')[1];
+
+        if (modifiedProductName && productsToMerge.includes(modifiedProductName)) {
+            row.Modification = `Renamed as ${newName}`;
+        }
+    });
+
+    // Initialize HiddenColumn as an empty string for each product
+    originalProducts.forEach(product => {
+        product.HiddenColumn = '';
+    });
+
+    // Update HiddenColumn for products where Modification contains 'Renamed as'
+    originalProducts.forEach((originalProduct, index) => {
+        if (originalProduct.Modification && originalProduct.Modification.includes('Renamed as')) {
+            originalProducts[index].HiddenColumn = originalProduct.Modification;
+        } else {
+            const productNames = originalProducts.map(prod => prod.Product);
+            const mergedProducts = productNames.filter(name => originalProduct.Modification && originalProduct.Modification.includes(name));
+            if (mergedProducts.length > 0) {
+                originalProducts[index].HiddenColumn = `Renamed as ${originalProduct.Product}`;
+            }
+        }
+    });
+
+    renderDataFrame(originalProducts);
+
+    // Calculate total volume for the newly merged products associated with the newName
+    const totalVolumeForNewName = calculateMergedValues(productsToMerge, newName);
+
+    // Create a new object representing the newly merged product with total volume
+    const mergedRow = { 'Product': newName, 'Sales_Volume': totalVolumeForNewName };
+
+    copiedProducts.push(mergedRow);
+
+    const modifiedCopiedProducts = copiedProducts.filter((_, index) => !indicesToMerge.includes(index));
+    copiedProducts = modifiedCopiedProducts;
+
+    renderCopiedDataFrame(copiedProducts);
+
+    saveMergeToHistory(productsToMerge, newName, totalVolumeForNewName);
+}
+
+function isRenamedAs(modification, newName) {
+    const pattern = `Renamed as ${newName}`;
+    return modification && modification.startsWith(pattern) && modification.length === pattern.length;
+}
+
+function calculateMergedValues(productsToMerge, newName) {
+    let totalVolumeForNewName = 0;
+
+    originalProducts.forEach(product => {
+        const modification = product.Modification || '';
+
+        // Check if the modification follows the pattern 'Renamed as {newName}' with exact length
+        if (isRenamedAs(modification, newName)) {
+            totalVolumeForNewName += product.Sales_Volume || 0;
+        }
+    });
+
+    return totalVolumeForNewName;
+}
+//+++++
+
+
+
+
+// === UNDO FUNCTION ===
+let originalProducts = []; // Store the original products
+let copiedProducts = []; // Store the copied products
+let changesHistory = []; // Store the history of changes made
+let originalModifications = {};
+
+
+// Function to save removal action to history
+function saveRemoveToHistory(indicesToRemove, removedData) {
+    changesHistory.push({ action: 'remove', indices: indicesToRemove, removedData });
+}
+
+// Function to save merge action to history
+function saveMergeToHistory(productsToMerge, newName, totalVolumeForNewName) {
+    const actualNewName = newName || ''; // Ensure newName is not null or undefined
+
+    saveOriginalModifications(productsToMerge); // Save original modifications before the merge
+
+    changesHistory.push({
+        action: 'merge',
+        productsToMerge: productsToMerge.slice(),
+        newName: actualNewName, // Use the validated newName
+        totalVolumeForNewName,
+    });
+}
+
+// Function to save original Modifications before the merge
+function saveOriginalModifications(productsToMerge) {
+    productsToMerge.forEach(productName => {
+        const modifiedProduct = originalProducts.find(product => product.Product === productName);
+        if (modifiedProduct) {
+            originalModifications[productName] = modifiedProduct.Modification || '';
+        }
+    });
+}
+
+function undoLastAction() {
+    if (changesHistory.length > 0) {
+
+        const lastChange = changesHistory.pop();
+
+        if (lastChange.action === 'remove') {
+            const { indices, removedData } = lastChange;
+
+            // Restore removed rows into copiedProducts
+            removedData.forEach(row => {
+                copiedProducts.splice(indices[0], 0, row);
+                indices.shift();
+            });
+
+            // Restore the 'Removed' status in originalProducts
+            removedData.forEach(removedRow => {
+                originalProducts.forEach(row => {
+                    if (row.Product === removedRow.Product) {
+                        row.Modification = '';
+                    }
+                });
+            });
+
+            // Copy content from HiddenColumn to Modification in originalProducts
+            removedData.forEach(removedRow => {
+                originalProducts.forEach(product => {
+                    if (product.HiddenColumn && product.HiddenColumn.includes(removedRow.Product)) {
+                        product.Modification = product.HiddenColumn;
+                    }
+                });
+            });
+
+            renderCopiedDataFrame(copiedProducts);
+            renderDataFrame(originalProducts);
+
+        } else if (lastChange.action === 'merge') {
+            const { newName } = lastChange;
+
+            // Filter out and remove newName from copiedProducts
+            const filteredCopiedProducts = copiedProducts.filter(product => product.Product !== newName);
+
+            // Find corresponding entries in originalProducts
+            const correspondingEntries = originalProducts.filter(
+                product => product.Modification && product.Modification.includes(newName)
+            );
+
+            // Remove content from Modification column in originalProducts
+            correspondingEntries.forEach(product => {
+                if (product.Modification && product.Modification.includes(newName)) {
+                    product.Modification = '';
+                }
+            });
+
+            // Update copiedProducts with the modified entries
+            filteredCopiedProducts.push(...correspondingEntries);
+            copiedProducts = filteredCopiedProducts;
+
+            // Render the updated copiedProducts and originalProducts
+            renderCopiedDataFrame(copiedProducts);
+            renderDataFrame(originalProducts);
+        }
+  }
+}
+//+++++
+
+
+
+
+
+// === FINISH & EXPORT FUNCTION ===
+// Function to copy 'Product Group' data from copiedProducts to originalProducts on Finish & Export
+function copyProductGroupToOriginal() {
+    copiedProducts.forEach(copiedProduct => {
+        const matchingOriginalProducts = originalProducts.filter(
+            originalProduct => (
+                originalProduct.Product === copiedProduct.Product ||
+                (originalProduct.Modification &&
+                    originalProduct.Modification.startsWith(`Renamed as ${copiedProduct.Product}`))
+            )
+        );
+
+        matchingOriginalProducts.forEach(matchingOriginalProduct => {
+            matchingOriginalProduct['Product Group'] = copiedProduct['Product Group'];
+        });
+
+        // Update blanks in 'Product Group' of originalProducts to 'Other' if corresponding 'Product Group' in copiedProducts is empty
+        if (!copiedProduct['Product Group']) {
+            const correspondingOriginalProducts = originalProducts.filter(
+                originalProduct => (
+                    originalProduct.Product === copiedProduct.Product ||
+                    (originalProduct.Modification &&
+                        originalProduct.Modification.startsWith(`Renamed as ${copiedProduct.Product}`)) ||
+                    (originalProduct.Modification && originalProduct.Modification === "Removed")
+                )
+            );
+
+            correspondingOriginalProducts.forEach(correspondingOriginalProduct => {
+                if (correspondingOriginalProduct) {
+                    if (correspondingOriginalProduct.Modification === "Removed") {
+                        correspondingOriginalProduct['Product Group'] = 'None';
+                    } else if (!correspondingOriginalProduct['Product Group']) {
+                        correspondingOriginalProduct['Product Group'] = 'Other';
+                    }
+                }
+            });
+        }
+    });
+
+    renderDataFrame(originalProducts);
+    // Show the loading spinner before sending data to the backend
+    showLoadingSpinner();
+
+    sendOriginalProductsToBackend();
+}
+
+
+
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+// Function to send originalProducts to the backend
+const csrftoken = getCookie('csrftoken');
+
+function sendOriginalProductsToBackend() {
+    const xhr = new XMLHttpRequest();
+    const project_id = document.getElementById('project_id').value.trim();
+
+    const url = `/Transfer_point/${project_id}/`;
+
+    xhr.open('POST', url, true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('X-CSRFToken', csrftoken); // Include CSRF token in the request headers
+
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 200) {
+                console.log('Data successfully sent to the backend!');
+
+                // Redirect to Project_List
+                window.location.href = `/Existing_Projects/Data_Portal/${project_id}/`;
+            } else {
+                console.error('Error:', xhr.status);
+            }
+        }
+    };
+
+    // Convert originalProducts to JSON and send in the request body
+    const modifiedProducts = JSON.stringify(originalProducts);
+    xhr.send(modifiedProducts);
+}
+//+++++
+
+
+
+// === EVENT LISTENERS ===
+document.addEventListener('DOMContentLoaded', function() {
+
+    const project_id = document.getElementById('project_id').value.trim();
+
+    // Store the initial state of originalProducts and copiedProducts
+    const initialOriginalProducts = JSON.parse(JSON.stringify(originalProducts));
+    const initialCopiedProducts = JSON.parse(JSON.stringify(copiedProducts));
+
+    // Attach the removeSelectedRows function to the Remove button
+    document.getElementById('removeButton').addEventListener('click', removeSelectedRows);
+
+    // Attach the mergeOrRenameSelectedRows function to the Merge button
+    document.getElementById('mergeButton').addEventListener('click', mergeOrRenameSelectedRows);
+
+    // Attach undo function to the Undo button
+    document.getElementById('undoButton').addEventListener('click', undoLastAction);
+
+    // Function to add the 'Product Group' column
+    function addProductGroupColumn() {
+        const copiedTable = document.getElementById('copiedProductsTable');
+        const headerRow = copiedTable.querySelector('tr');
+
+        // Create a 'Product Group' header cell
+        const productGroupHeader = document.createElement('th');
+        productGroupHeader.textContent = 'Product Group';
+        productGroupHeader.rowSpan = 2; // Set rowspan to 2 rows
+        headerRow.appendChild(productGroupHeader);
+
+        // Add "None" to 'Modification' column in originalProducts if it is empty
+        originalProducts.forEach(row => {
+            if (!row['Modification']) {
+                row['Modification'] = 'None';
+            }
+        });
+
+
+        // Create a contenteditable cell for each row
+        copiedProducts.forEach((row, index) => {
+            const groupCell = document.createElement('td');
+            groupCell.setAttribute('contenteditable', 'true'); // Make the cell contenteditable
+            groupCell.textContent = row['Product Group'] || ''; // Set initial value
+
+            // Event listener for input changes
+            groupCell.addEventListener('input', function() {
+                const typedValue = groupCell.textContent.trim();
+                copiedProducts[index]['Product Group'] = typedValue;
+            });
+
+            // Append the contenteditable cell to the row
+            const currentRow = copiedTable.querySelectorAll('tr')[index + 2];
+            currentRow.appendChild(groupCell);
+        });
+    }
+
+    // Event listener for the Finish button
+    document.getElementById('finishButton').addEventListener('click', function() {
+        const confirmation = confirm("Product edition will no longer be possible.\nDo you want to continue?");
+        if (confirmation) {
+            const actionButtons = [
+                document.getElementById('removeButton'),
+                document.getElementById('mergeButton'),
+                document.getElementById('undoButton'),
+                document.getElementById('finishButton'),
+                document.getElementById('finishAndExportButton'),
+                document.getElementById('productsTableContainer')
+            ];
+
+            // Hide all action buttons except "Add Product Group" and "Finish and Export"
+            actionButtons.forEach(button => {
+                if (button.id !== 'finishAndExportButton') {
+                    button.style.display = 'none';
+                } else {
+                    button.style.display = 'inline-block'; // Show "Finish and Export" and "Add Product Group"
+                }
+            });
+
+            // Adjust the width of copiedProductsTableContainer to occupy the full width
+                document.getElementById('copiedProductsTableContainer').classList.remove('col-md-6');
+                document.getElementById('copiedProductsTableContainer').classList.add('col-md-12');
+
+
+            // Call the function to add the 'Product Group' column
+            addProductGroupColumn();
+        }
+    });
+
+    // Event listener for the Finish & Export button
+    document.getElementById('finishAndExportButton').addEventListener('click', function () {
+        copyProductGroupToOriginal();
+        // Hide the entire content container
+        document.getElementById('contentContainer').style.display = 'none';
+
+        });
+
+    // Parse the JSON data
+    const products_json = "{{ products_json|escapejs }}";
+    const productsData = JSON.parse(products_json);
+
+    // Update originalProducts and copiedProducts
+    originalProducts = productsData.slice();
+    copiedProducts = productsData.slice();
+
+    // Render the data frames
+    renderDataFrame(originalProducts);
+    renderCopiedDataFrame(copiedProducts);
+    showDataFrames(); // Show the container wrapper after rendering
+    });
+
+
+</script>
+
+
+{% endblock content %}
+

@@ -1,0 +1,28 @@
+{% extends 'QuarryIQ/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<title>Sagitta Nova</title>
+
+<div class="container mt-0">
+    <div class="text-center">
+        <img src="{% static 'QuarryIQ/images/Logo1.png' %}" alt="Icon" class="img-fluid mt-0 mb-0" style="width: 500px; height: auto;">
+
+        <h1 class="display-4 font-weight-bold">Deeptech software and consulting services
+            for the building materials sectors</h1>
+
+        <p class="lead" style="margin-top: 40px;">
+            Sagitta Nova provides easy to use and cutting-edge software around the world.<br>
+            With more than 15 years of experience in mathematical optimisation, we help clients solve complex challenges faced <br>
+            in quarries and cement plants operations.
+        </p>
+
+        <p class="lead" style="margin-top: 60px;">
+            Want to know more?<br>
+        </p>
+        <a href="{% url 'Contact' %}" class="btn btn-outline-success" style="width: 250px;">Contact Us</a>
+    </div>
+</div>
+
+{% endblock content %}

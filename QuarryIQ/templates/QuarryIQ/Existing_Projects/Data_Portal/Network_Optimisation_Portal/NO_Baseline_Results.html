@@ -1,0 +1,393 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+
+<title>NO - Baseline Results</title>
+
+<h2>Network Optimisation - Baseline Results</h2>
+<h4>Project: {{ project_name }} {{ project_time_period }}</h4>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+<table>
+    <tr>
+        <th class="empty"><button class="btn btn-outline-success" style="width: 250px;" id="downloadRawData">Download Raw Results</button></th>
+        <th class="empty"><button class="btn btn-outline-success" style="width: 250px; margin-left: 20px;" id="downloadCustomerData">Download Customer Data</button></th>
+        <th class="empty"><button class="btn btn-outline-success" style="width: 250px; margin-left: 20px;" id="downloadTransportData">Download Transport Cost</button></th>
+    </tr>
+    <tr>
+        <th class="empty"></th>
+    </tr>
+    <tr>
+        <th class="empty"><button class="btn btn-warning" style="width: 250px;" id="backToPortal" onclick="redirectToPortal()">Go Back To Net Opt Portal</button></th>
+    </tr>
+</table>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+
+<div class="table-container" style="max-width: 1000px;">
+    <table class="table">
+        <thead>
+            <tr>
+                <th style="vertical-align: middle;" colspan="2">Rebuilt P&L - Baseline - {{ project_name }} {{ project_time_period }}</th>
+            </tr>
+            <tr>
+                <th style="vertical-align: middle;">P&L Label</th>
+                <th style="vertical-align: middle;">Baseline</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="vertical-align: middle;">Sales [t]</td>
+                <td style="vertical-align: middle;">{{ Baseline_PL_Items.NO_Baseline_Total_Sales }}</td>
+            </tr>
+            <tr>
+                <td style="vertical-align: middle;">Inventory Change [t]</td>
+                <td style="vertical-align: middle;">{{ Baseline_PL_Items.NO_Baseline_Inventory_Change }}</td>
+            </tr>
+            <tr>
+                <th style="vertical-align: middle;">Production [t]</th>
+                <th style="vertical-align: middle;">{{ Baseline_PL_Items.NO_Baseline_Total_Production }}</th>
+            </tr>
+            <tr>
+                <th class="empty"></th>
+            </tr>
+            <tr>
+                <td style="vertical-align: middle;">Gross Sales [{{ currency }}]</td>
+                <td style="vertical-align: middle;">{{ Baseline_PL_Items.NO_Baseline_Gross_Sales }}</td>
+            </tr>
+            <tr>
+                <td style="vertical-align: middle;">Distribution Cost [{{ currency }}]</td>
+                <td style="vertical-align: middle;">{{ Baseline_PL_Items.NO_Baseline_Distribution_Cost }}</td>
+            </tr>
+            <tr>
+                <th style="vertical-align: middle;">Net Sales [{{ currency }}]</th>
+                <th style="vertical-align: middle;">{{ Baseline_PL_Items.NO_Baseline_Net_Sales }}</th>
+            </tr>
+            <tr>
+                <th class="empty"></th>
+            </tr>
+            <tr>
+                <td style="vertical-align: middle;">Variable Cost [{{ currency }}]</td>
+                <td style="vertical-align: middle;">{{ Baseline_PL_Items.NO_Baseline_Variable_Cost }}</td>
+            </tr>
+            <tr>
+                <th style="vertical-align: middle;">Gross Margin [{{ currency }}]</th>
+                <th style="vertical-align: middle;">{{ Baseline_PL_Items.NO_Baseline_Gross_Margin }}</th>
+            </tr>
+            <tr>
+                <td style="vertical-align: middle; font-size: smaller; font-style: italic;">% on Gross Sales</td>
+                <td style="vertical-align: middle; font-size: smaller; font-style: italic;">{{ Baseline_PL_Items.NO_Baseline_Gross_Margin_Percentage }}%</td>
+            </tr>
+            <tr>
+                <th class="empty"></th>
+            </tr>
+            <tr>
+                <td style="vertical-align: middle;">Fixed Cost [{{ currency }}]</td>
+                <td style="vertical-align: middle;">{{ Baseline_PL_Items.NO_Baseline_Fixed_Cost }}</td>
+            </tr>
+            <tr>
+                <th style="vertical-align: middle;">EBIT [{{ currency }}]</th>
+                <th style="vertical-align: middle;">{{ Baseline_PL_Items.NO_Baseline_EBIT }}</th>
+            </tr>
+            <tr>
+                <td style="vertical-align: middle; font-size: smaller; font-style: italic;">% on Gross Sales</td>
+                <td style="vertical-align: middle; font-size: smaller; font-style: italic;">{{ Baseline_PL_Items.NO_Baseline_EBIT_Percentage }}%</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+
+<table class="table">
+    <thead>
+        <tr>
+            <th colspan="5">General Outlook per Quarry - Baseline - {{ project_name }} {{ project_time_period }}</th>
+        </tr>
+        <tr>
+            <th style="vertical-align: middle;">Quarry</th>
+            <th style="vertical-align: middle;">Opening Hours [h]</th>
+            <th style="vertical-align: middle;">Operating Hours [h]</th>
+            <th style="vertical-align: middle;">Sales Volume [t]</th>
+            <th style="vertical-align: middle;">Stock Variation [t]</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for index, row in NO_Baseline_Outlook_df.iterrows %}
+        <tr>
+            <td style="vertical-align: middle;">{{ row.Quarries }}</td>
+            <td style="vertical-align: middle;">{{ row.Opening_Hours }}</td>
+            <td style="vertical-align: middle;">{{ row.Operating_Hours }}</td>
+            <td style="vertical-align: middle;">{{ row.Sales_Volume }}</td>
+            <td style="vertical-align: middle;">{{ row.Stocks_Variation }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+        {{ Plotly_Revenue|safe }}
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+        {{ Plotly_Gross_Margin|safe }}
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+
+<input type="hidden" id="project_id" value="{{ project_id }}">
+<div class="download-data_NO_Baseline_Raw_Results_df" data-download="{{ NO_Baseline_Raw_Results_df }}"></div>
+<div class="download-data_transport_cost_df" data-download="{{ transport_cost_df }}"></div>
+<div class="download-data_NO_Baseline_Customer_Results_df" data-download="{{ NO_Baseline_Customer_Results_df }}"></div>
+
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+
+
+<script>
+function redirectToPortal() {
+    // Retrieve project_id and quarry_id values
+    var project_id = document.getElementById("project_id").value;
+
+    // Construct the URL
+    var url = `/Existing_Projects/Data_Portal/Network_Optimisation_Portal/${project_id}/`;
+
+    // Navigate to the URL
+    window.location.href = url;
+}
+
+
+
+document.getElementById('downloadRawData').addEventListener('click', function() {
+    // Function to convert array buffer to binary string
+    function s2ab(s) {
+        var buf = new ArrayBuffer(s.length);
+        var view = new Uint8Array(buf);
+        for (var i = 0; i != s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
+        return buf;
+    }
+
+    // Function to download Excel file
+    function downloadExcel(data, filename) {
+        var wb = XLSX.utils.book_new();
+
+        // Add a new worksheet with data
+        var ws = XLSX.utils.json_to_sheet(data);
+        XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+
+        // Generate a binary string from the XLSX file
+        var wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+
+        // Create a blob and download link
+        var blob = new Blob([s2ab(wbout)], { type: 'application/octet-stream' });
+        var url = window.URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        document.body.appendChild(a);
+        a.style = 'display: none';
+        a.href = url;
+        a.download = filename;
+        a.click();
+
+        // Clean up
+        window.URL.revokeObjectURL(url);
+    }
+
+    // Get data from data attributes
+    var NO_Baseline_data = document.querySelector('.download-data_NO_Baseline_Raw_Results_df').dataset.download;
+
+    // Ensure that data is not empty
+    if (!NO_Baseline_data) {
+        console.error("No data to download.");
+        return;
+    }
+
+    // Convert JSON to array of objects
+    var NO_Baseline_Raw_Results_df = JSON.parse(NO_Baseline_data);
+
+    // Combine columns and data into a single array of objects
+    var dataToDownload = NO_Baseline_Raw_Results_df.data.map((row, index) => {
+        var result = {};
+        NO_Baseline_Raw_Results_df.columns.forEach((col, colIndex) => {
+            result[col] = row[colIndex];
+        });
+        return result;
+    });
+
+    var project_name = '{{ project_name }}';
+    var project_time_period = '{{ project_time_period }}';
+
+    // Download Excel file
+    var filename = 'RawResults_' + project_name + '_' + project_time_period + '_Baseline.xlsx';
+    downloadExcel(dataToDownload, filename);
+});
+
+
+document.getElementById('downloadTransportData').addEventListener('click', function() {
+    // Function to convert array buffer to binary string
+    function s2ab(s) {
+        var buf = new ArrayBuffer(s.length);
+        var view = new Uint8Array(buf);
+        for (var i = 0; i != s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
+        return buf;
+    }
+
+    // Function to download Excel file
+    function downloadExcel(data, filename) {
+        var wb = XLSX.utils.book_new();
+
+        // Add a new worksheet with data
+        var ws = XLSX.utils.json_to_sheet(data);
+        XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+
+        // Generate a binary string from the XLSX file
+        var wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+
+        // Create a blob and download link
+        var blob = new Blob([s2ab(wbout)], { type: 'application/octet-stream' });
+        var url = window.URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        document.body.appendChild(a);
+        a.style = 'display: none';
+        a.href = url;
+        a.download = filename;
+        a.click();
+
+        // Clean up
+        window.URL.revokeObjectURL(url);
+    }
+
+    // Get data from data attributes
+    var Transport_data = document.querySelector('.download-data_transport_cost_df').dataset.download;
+
+    // Ensure that data is not empty
+    if (!Transport_data) {
+        console.error("No data to download.");
+        return;
+    }
+
+    // Convert JSON to array of objects
+    var transport_data_df = JSON.parse(Transport_data);
+
+    // Combine columns and data into a single array of objects
+    var dataToDownload = transport_data_df.data.map((row, index) => {
+        var result = {};
+        transport_data_df.columns.forEach((col, colIndex) => {
+            result[col] = row[colIndex];
+        });
+        return result;
+    });
+
+    var project_name = '{{ project_name }}';
+    var project_time_period = '{{ project_time_period }}';
+
+    // Download Excel file
+    var filename = 'TransportCost_' + project_name + '_' + project_time_period + '.xlsx';
+    downloadExcel(dataToDownload, filename);
+});
+
+
+
+document.getElementById('downloadCustomerData').addEventListener('click', function() {
+    // Function to convert array buffer to binary string
+    function s2ab(s) {
+        var buf = new ArrayBuffer(s.length);
+        var view = new Uint8Array(buf);
+        for (var i = 0; i != s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
+        return buf;
+    }
+
+    // Function to download Excel file
+    function downloadExcel(data, filename) {
+        var wb = XLSX.utils.book_new();
+
+        // Add a new worksheet with data
+        var ws = XLSX.utils.json_to_sheet(data);
+        XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+
+        // Generate a binary string from the XLSX file
+        var wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+
+        // Create a blob and download link
+        var blob = new Blob([s2ab(wbout)], { type: 'application/octet-stream' });
+        var url = window.URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        document.body.appendChild(a);
+        a.style = 'display: none';
+        a.href = url;
+        a.download = filename;
+        a.click();
+
+        // Clean up
+        window.URL.revokeObjectURL(url);
+    }
+
+    // Get data from data attributes
+    var Customer_data = document.querySelector('.download-data_NO_Baseline_Customer_Results_df').dataset.download;
+
+    // Ensure that data is not empty
+    if (!Customer_data) {
+        console.error("No data to download.");
+        return;
+    }
+
+    // Convert JSON to array of objects
+    var customer_data_df = JSON.parse(Customer_data);
+
+    // Combine columns and data into a single array of objects
+    var dataToDownload = customer_data_df.data.map((row, index) => {
+        var result = {};
+        customer_data_df.columns.forEach((col, colIndex) => {
+            result[col] = row[colIndex];
+        });
+        return result;
+    });
+
+    var project_name = '{{ project_name }}';
+    var project_time_period = '{{ project_time_period }}';
+
+    // Download Excel file
+    var filename = 'CustomerData_' + project_name + '_' + project_time_period + '_Baseline.xlsx';
+    downloadExcel(dataToDownload, filename);
+});
+
+
+</script>
+
+{% endblock content %}

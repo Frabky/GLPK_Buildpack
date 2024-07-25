@@ -1,0 +1,294 @@
+{% extends 'QuarryIQ/base.html' %}
+
+{% block content %}
+<title>NO - Scenario Information</title>
+
+<h2>Network Optimisation - Scenario Information - {{ scenario_name }}</h2>
+<h4>Project: {{ project_name }} {{ project_time_period }}</h4>
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+<div class="table-container" style="max-width: 700px;">
+    <table class="table">
+        <thead>
+            <tr style="height: 50px;">
+                <td style="vertical-align: middle; font-weight: bold;">Optimisation Type</td>
+                {% if not NO_Scenario_Done %}
+                <td>
+                    <select class="custom-select" name="optType" style="width: 100%;">
+                        <option value="" disabled selected style="text-align: center;">Choose...</option>
+                        <option value="meeting_all_sales" style="text-align: center;">Meeting All Sales</option>
+                        <option value="max_gross_margin" style="text-align: center;">Maximizing Gross Margin</option>
+                    </select>
+                </td>
+                {% else %}
+                <td>
+                    <select class="custom-select" name="optType" style="width: 100%;">
+                        <option value="" disabled selected style="text-align: center;">Choose...</option>
+                        <option value="meeting_all_sales" style="text-align: center;"
+                                {% if optimisation_type == "meeting_all_sales" %}selected{% endif %}>
+                            Meeting All Sales
+                        </option>
+                        <option value="max_gross_margin" style="text-align: center;"
+                                {% if optimisation_type == "max_gross_margin" %}selected{% endif %}>
+                            Maximizing Gross Margin
+                        </option>
+                    </select>
+                </td>
+                {% endif %}
+            </tr>
+        </thead>
+    </table>
+</div>
+
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+
+
+<table id="infoTable" class="table">
+    <thead>
+        <tr>
+            <th colspan="5">Scenario - {{ scenario_name }}</th>
+        </tr>
+        <tr>
+            <th style="vertical-align: middle;">Quarry</th>
+            <th style="vertical-align: middle;">Max. Opening Hours [h]</th>
+            <th style="vertical-align: middle;">Max. Sales Volume [t]</th>
+            <th style="vertical-align: middle;">Fixed Cost [k{{ currency }}]</th>
+        </tr>
+    </thead>
+    {% if scenario_infoTable_df.empty %}
+    <tbody>
+        {% for quarry in quarries_list %}
+        <tr>
+            <td style="vertical-align: middle;" class="quarries">{{ quarry.name }}</td>
+            <td style="vertical-align: middle;" class="maxOpeningHours" contenteditable="true" onkeypress="return isNumber(event)"></td>
+            <td style="vertical-align: middle;" class="maxSalesVolume" contenteditable="true" onkeypress="return isNumber(event)"></td>
+            <td style="vertical-align: middle;" class="fixedCost" contenteditable="true" onkeypress="return isNumber(event)"></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    {% else %}
+    <tbody>
+        {% for index, row in scenario_infoTable_df.iterrows %}
+        <tr>
+            <td style="vertical-align: middle;" class="quarries">{{ row.Quarry }}</td>
+            <td style="vertical-align: middle;" class="maxOpeningHours" contenteditable="true" onkeypress="return isNumber(event)">{{ row.Max_Opening_Hours }}</td>
+            <td style="vertical-align: middle;" class="maxSalesVolume" contenteditable="true" onkeypress="return isNumber(event)">{{ row.Max_Sales_Volume }}</td>
+            <td style="vertical-align: middle;" class="fixedCost" contenteditable="true" onkeypress="return isNumber(event)">{{ row.Fixed_Cost }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    {% endif %}
+</table>
+
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+
+<button class='btn btn-outline-success' style="width: 250px;" id="save">Calculate Scenario</button>
+
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+<table><tr><th class="empty"></th><th class="empty"></th></tr></table>
+
+<button class="btn btn-warning" style="width: 250px;" id="backToPortal" onclick="redirectToPortal()">Go Back To Net Opt Portal</button>
+
+
+<input type="hidden" id="project_id" value="{{ project_id }}">
+<input type="hidden" id="scenario_id" value="{{ scenario_id }}">
+<input type="hidden" id="NO_Baseline_Done" value="{{ NO_Baseline_Done }}">
+
+<script>
+
+// Making sure only number can be typed
+function isNumber(evt) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+
+    if (charCode === 45) { // If the character is "-"
+        return false; // Prevent input of "-"
+    } else if (charCode === 8) { // If the character is backspace
+        return true; // Allow backspace
+    } else if (charCode !== 43 && (charCode < 48 || charCode > 57)) {
+        return false; // Only allow digits and backspace
+    }
+    return true;
+}
+
+
+function validateAndSave() {
+    // Retrieve the value of NO_Baseline_Done
+    var NO_Baseline_Done = document.getElementById('NO_Baseline_Done').value;
+
+    // Check if NO_Baseline_Done is false
+    if (NO_Baseline_Done === 'False') {
+        alert('Please complete Baseline before calculating scenarios.');
+        // Prevent the form from being submitted
+        event.preventDefault();
+        return;
+    }
+
+    // Get all rows in the table
+    var rows = document.querySelectorAll('#infoTable tr');
+    var allRowsFilled = true;
+
+    // Iterate over each row, starting from the third row (index 2)
+    for (var i = 2; i < rows.length; i++) {
+        var row = rows[i];
+        var maxOpeningHoursCell = row.querySelector('.maxOpeningHours');
+        var maxSalesVolumeCell = row.querySelector('.maxSalesVolume');
+        var fixedCostCell = row.querySelector('.fixedCost');
+
+        // Check if cells exist and their content is not empty
+        if (!maxOpeningHoursCell || maxOpeningHoursCell.textContent.trim() === '' ||
+            !maxSalesVolumeCell || maxSalesVolumeCell.textContent.trim() === '' ||
+            !fixedCostCell || fixedCostCell.textContent.trim() === '') {
+            allRowsFilled = false;
+        }
+    }
+
+    // Show alert if any required cell is empty
+    if (!allRowsFilled) {
+        alert('All cells must be filled in before proceeding to calculation.');
+        return;
+    }
+
+    // Check if the optimisation type is selected
+    var optTypeSelect = document.querySelector('.custom-select[name="optType"]');
+
+    if (!optTypeSelect || optTypeSelect.value === '') {
+        alert('Please select the optimisation type.');
+        return;
+    }
+
+    sendDataToBackend();
+}
+
+
+function extractData() {
+    // Extract data from the additional table
+    var additionalTable = document.getElementById("infoTable");
+    var infoTableHeaderRow = ["Quarry", "Max_Opening_Hours", "Max_Sales_Volume", "Fixed_Cost"];
+    var infoTableData = [infoTableHeaderRow];
+
+    var infoRows = infoTable.rows;
+    for (var k = 2; k < infoRows.length; k++) { // Skip the 2 header rows
+        var row = infoRows[k];
+        var cells = row.cells;
+        var rowData = [];
+
+        for (var l = 0; l < cells.length; l++) {
+            var cell = cells[l];
+            rowData.push(cell.textContent.trim());
+        }
+
+        infoTableData.push(rowData);
+    }
+
+    // Get the selected optimisation type
+    var optTypeSelect = document.querySelector('.custom-select[name="optType"]');
+    var selectedOptType = optTypeSelect ? optTypeSelect.value : '';
+
+    // Combine both tables' data into one object
+    var extractedData = {
+        infoTable: infoTableData,
+        optimisationType: selectedOptType
+    };
+
+    return extractedData;
+}
+
+
+function sendDataToBackend() {
+    // Show the loading spinner before sending data to the backend
+    showLoadingSpinnerLong();
+
+    // Call functions to get data
+    var data = extractData();
+
+    // Stringify the data
+    var jsonData = JSON.stringify(data);
+
+    // Retrieve project_id and scenario_id
+    const project_id = document.getElementById('project_id').value.trim();
+    const scenario_id = document.getElementById('scenario_id').value.trim();
+
+    // Construct the URL
+    const url = `/Existing_Projects/Data_Portal/Network_Optimisation_Scenario_Information_bridge/${project_id}/${scenario_id}/`;
+
+    // Get CSRF token
+    const csrftoken = getCookie('csrftoken');
+
+    // Create a new XMLHttpRequest
+    const xhr = new XMLHttpRequest();
+
+    // Open the request
+    xhr.open('POST', url, true);
+
+    // Set request headers
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('X-CSRFToken', csrftoken);
+
+    // Define the onload function
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            console.log('Data successfully sent to the backend!');
+            // Redirect to Product list page
+            window.location.href = `/Existing_Projects/Data_Portal/Network_Optimisation_Scenario_Results/${project_id}/${scenario_id}/`;
+        } else {
+            console.error('Error:', xhr.status);
+        }
+
+    };
+
+    // Send the JSON data
+    xhr.send(jsonData);
+}
+
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+document.getElementById('save').addEventListener('click', function() {
+    validateAndSave();
+});
+
+function redirectToPortal() {
+    // Retrieve project_id and quarry_id values
+    var project_id = document.getElementById("project_id").value;
+
+    // Construct the URL
+    var url = `/Existing_Projects/Data_Portal/Network_Optimisation_Portal/${project_id}/`;
+
+    // Navigate to the URL
+    window.location.href = url;
+}
+
+</script>
+
+{% endblock content %}
