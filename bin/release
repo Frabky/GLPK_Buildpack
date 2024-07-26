@@ -1,10 +1,11 @@
 #!/bin/sh
 
-echo "-----> GLPK buildpack release"
-
-# Define any necessary config vars
-cat <<EOF
+cat << EOF
 ---
 config_vars:
   GLPK_BIN: "/app/bin"
+addons:
+  - heroku-postgresql
+default_process_types:
+  web: python app.py
 EOF
