@@ -1,23 +1,31 @@
-#!/bin/sh
-
-GLPK_VERSION=4.65
-GLPK_URL=https://ftp.gnu.org/gnu/glpk/glpk-${GLPK_VERSION}.tar.gz
+#!/bin/bash
 
 BUILD_DIR=$1
+CACHE_DIR=$2
+ENV_DIR=$3
 
-echo "-----> Installing GLPK ${GLPK_VERSION}"
+echo "-----> Installing GLPK"
 
-# Download and extract GLPK
-curl -L $GLPK_URL | tar xz -C /tmp
-cd /tmp/glpk-${GLPK_VERSION}
+# Set the version of GLPK to install
+GLPK_VERSION="5.0"
 
-# Configure and install
-./configure --prefix=/app/.heroku/vendor
+# Download the GLPK source
+curl -L "https://ftp.gnu.org/gnu/glpk/glpk-$GLPK_VERSION.tar.gz" -o /tmp/glpk.tar.gz
+
+# Extract the source
+tar xzf /tmp/glpk.tar.gz -C /tmp
+
+# Compile and install GLPK
+cd /tmp/glpk-$GLPK_VERSION
+./configure --prefix=$BUILD_DIR
 make
 make install
 
+# Set GLPK_BIN environment variable
+echo "export GLPK_BIN=$BUILD_DIR/bin" >> $ENV_DIR/GLPK_BIN
+
 # Clean up
 cd /
-rm -rf /tmp/glpk-${GLPK_VERSION}
+rm -rf /tmp/glpk-$GLPK_VERSION /tmp/glpk.tar.gz
 
 echo "-----> GLPK installation done"

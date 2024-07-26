@@ -1,4 +1,10 @@
+#!/bin/sh
+
+echo "-----> GLPK buildpack release"
+
+# Define any necessary config vars
+cat <<EOF
 ---
 config_vars:
-  - GLPK_BIN
-
+  GLPK_BIN: "/app/bin"
+EOF
